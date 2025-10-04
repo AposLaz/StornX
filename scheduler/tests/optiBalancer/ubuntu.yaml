@@ -1,4 +1,0 @@
-kubectl run alpine-curl --image=alpine -n bank --restart=Never --labels="sidecar.istio.io/inject=false" --command -- sh -c "apk add --no-cache curl && sleep 3333333333333"
-
-apk update && apk add --no-cache --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing grpcurl
-grpcurl -plaintext -d '{"user_id":"test", "product_ids":["test"]}' recommendationservice:8080 demo.RecommendationService/ListRecommendations

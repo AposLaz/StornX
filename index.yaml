@@ -1,0 +1,19 @@
+apiVersion: v1
+entries:
+  schedflox:
+  - apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-10-04T09:41:12.537617804+03:00"
+    description: A Helm chart for SchedFloX
+    digest: 47ff1254bf19b4ba4e30dccd50a0b083ddd2b6cbd3603c510fa4b2bcb6757124
+    maintainers:
+    - email: aplazidis@gmail.com
+      name: Apostolos Lazidis
+    name: schedflox
+    sources:
+    - https://github.com/AposLaz/SchedFloX
+    type: application
+    urls:
+    - https://AposLaz.github.io/SchedFloX/schedflox-1.0.0.tgz
+    version: 1.0.0
+generated: "2025-10-04T09:41:12.536753562+03:00"
