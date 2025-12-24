@@ -50,7 +50,7 @@ export const loggerOperationInfo = (info: string) => {
 
 export const loggerStartApp = () => {
   console.log(
-    figlet.textSync('TrafOptScheduler', {
+    figlet.textSync('StornX', {
       font: 'Standard',
       whitespaceBreak: true,
     })
