@@ -1,0 +1,21 @@
+# new-alert-rules.yml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-alert-rules
+  namespace: istio-system
+data:
+  alerting_rules.yml: |
+    groups:
+    - name: example
+      rules:
+      - alert: LowMemoryUsage
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes * 100 < 90
+        for: 15s
+        labels:
+          severity: warning
+          env: prod
+          team: infra
+        annotations:
+          summary: Low memory usage detected
+          description: The memory usage on instance {{ $labels.instance }} is above 80% for more than 5 minutes.

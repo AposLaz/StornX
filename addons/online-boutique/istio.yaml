@@ -1,0 +1,109 @@
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: frontend
+  namespace: online-boutique
+spec:
+  host: frontend.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: adservice
+  namespace: online-boutique
+spec:
+  host: adservice.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: cartservice
+  namespace: online-boutique
+spec:
+  host: cartservice.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: checkoutservice
+  namespace: online-boutique
+spec:
+  host: checkoutservice.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: currencyservice
+  namespace: online-boutique
+spec:
+  host: currencyservice.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: emailservice
+  namespace: online-boutique
+spec:
+  host: emailservice.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: paymentservice
+  namespace: online-boutique
+spec:
+  host: paymentservice.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: productcatalogservice
+  namespace: online-boutique
+spec:
+  host: productcatalogservice.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: recommendationservice
+  namespace: online-boutique
+spec:
+  host: recommendationservice.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: shippingservice
+  namespace: online-boutique
+spec:
+  host: shippingservice.online-boutique.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM

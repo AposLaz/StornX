@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  lpa-controller:
+    container_name: lpa-controller
+    build:
+      context: ../
+      dockerfile: ./.docker/Dockerfile
+      target: production
+    volumes:
+      - ~/.kube:/root/.kube # Mount the .kube directory
+      - ~/.minikube:/root/.minikube # Mount the .minikube directory
+    environment:
+      - KUBECONFIG=/root/.kube/config
+      - MINIKUBE_HOME=/root/.minikube
+    ports:
+      - '3000:3000' # Map port 3000 on the host to port 3000 in the container

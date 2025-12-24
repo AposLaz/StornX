@@ -1,0 +1,9 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: hello-svc
+spec:
+  host: hello-svc.default.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM

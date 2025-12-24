@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traf-opt-scheduler
+spec:
+  selector:
+    matchLabels:
+      app: traf-opt-scheduler
+  template:
+    metadata:
+      labels:
+        app: traf-opt-scheduler
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      serviceAccountName: traf-opt-scheduler-sa
+      containers:
+        - name: traf-opt-scheduler
+          image: alazidis/opt-scheduler:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: ENV
+              value: production
+            - name: APP_PORT
+              value: "3000"
+            - name: NAMESPACES
+              value: online-boutique
+            - name: PROMETHEUS_URL
+              value: http://prometheus.istio-system.svc.cluster.local:9090
+            - name: CRONJOB_EXPRESSION
+              value: "* * * * *"
+            - name: METRICS_TYPE
+              value: memory
+            - name: METRICS_UPPER_THRESHOLD
+              value: "70"
+            - name: METRICS_LOWER_THRESHOLD
+              value: "20"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            failureThreshold: 3

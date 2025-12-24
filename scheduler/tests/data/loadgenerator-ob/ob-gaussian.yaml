@@ -1,0 +1,261 @@
+# apiVersion: v1
+# kind: ConfigMap
+# metadata:
+#   name: trapezoid-locustfile
+#   namespace: loadgenerator
+# data:
+#   locustfile.py: |
+#     #!/usr/bin/python
+#     import random, datetime
+#     from locust import FastHttpUser, TaskSet, between, LoadTestShape
+#     from faker import Faker
+
+#     fake = Faker()
+
+#     products = [
+#         '0PUK6V6EV0','1YMWWN1N4O','2ZYFJ3GM2N','66VCHSJNUP',
+#         '6E92ZMYYFZ','9SIQT8TOJO','L9ECAV7KIM','LS4PSXUNUM','OLJCESPC7Z'
+#     ]
+
+#     def index(l):
+#         l.client.get("/")
+
+#     def setCurrency(l):
+#         l.client.post(
+#             "/setCurrency",
+#             {'currency_code': random.choice(['EUR','USD','JPY','CAD','GBP','TRY'])}
+#         )
+
+#     def browseProduct(l):
+#         l.client.get("/product/" + random.choice(products))
+
+#     def viewCart(l):
+#         l.client.get("/cart")
+
+#     def addToCart(l):
+#         p = random.choice(products)
+#         l.client.get("/product/" + p)
+#         l.client.post("/cart", {
+#             'product_id': p,
+#             'quantity': random.randint(1,10)
+#         })
+
+#     def checkout(l):
+#         addToCart(l)
+#         cy = datetime.datetime.now().year + 1
+#         l.client.post("/cart/checkout", {
+#             'email': fake.email(),
+#             'street_address': fake.street_address(),
+#             'zip_code': fake.zipcode(),
+#             'city': fake.city(),
+#             'state': fake.state_abbr(),
+#             'country': fake.country(),
+#             'credit_card_number': fake.credit_card_number(card_type="visa"),
+#             'credit_card_expiration_month': random.randint(1,12),
+#             'credit_card_expiration_year': random.randint(cy, cy + 7),
+#             'credit_card_cvv': f"{random.randint(100,999)}",
+#         })
+
+#     class UserBehavior(TaskSet):
+#         def on_start(self):
+#             index(self)
+
+#         tasks = {
+#             index: 1,
+#             setCurrency: 2,
+#             browseProduct: 10,
+#             addToCart: 2,
+#             viewCart: 3,
+#             checkout: 1
+#         }
+
+#     class WebsiteUser(FastHttpUser):
+#         tasks = [UserBehavior]
+#         wait_time = between(1, 10)
+
+#     class FiveMinuteTrapezoid(LoadTestShape):
+#         """
+#         Step/ramp load profile in ~2.5 min / 5 min increments, then plateau,
+#         then controlled tear-down.
+
+#         Timeline (approx):
+#           0.0 min   ->   0 users
+#           2.5 min   ->  50 users
+#           5.0 min   -> 100 users
+#           7.5 min   -> 200 users
+#           10  min   -> 300 users
+#           12.5 min  -> 400 users
+#           15  min   -> 500 users
+#           17.5 min  -> 600 users
+#           20  min   -> 700 users
+#           40  min   -> 900 users
+#           42.5 min  -> 1050 users
+#           45  min   -> 1200 users  (peak)
+#           50  min   -> 1200 users
+#           55  min   -> 1200 users
+#           60  min   -> 1200 users
+#           65  min   ->    0 users (target goes to 0, ramp down begins)
+
+#         spawn_rate = 1.0 means we add/remove ~1 user/sec toward the target.
+#         """
+
+#         spawn_rate = 1.0  # users per second
+
+#         stages = [
+#             (    0,     0),
+#             (  150,    50),
+#             (  300,   100),
+#             (  450,   200),
+#             (  600,   300),
+#             (  750,   400),
+#             (  900,   500),
+#             ( 1050,   600),
+#             ( 1200,   700),   # ~20 min
+#             ( 2400,   900),   # ~40 min
+#             ( 2550,  1050),   # ~42.5 min
+#             ( 2700,  1200),   # ~45 min
+#             ( 3000,  1200),   # ~50 min
+#             ( 3300,  1200),   # ~55 min
+#             ( 3600,  1200),   # ~60 min
+#             ( 3900,     0),   # ~65 min -> begin drain
+#         ]
+
+#         def tick(self):
+#             t = int(self.get_run_time())
+
+#             # Give ~20 min after last stage to drain users at spawn_rate=1/sec.
+#             # 3900s + 1200s ~= 5100s (~85 min total).
+#             if t > 5100:
+#                 return None
+
+#             # Use the most recent stage whose timestamp <= t
+#             target_users = 0
+#             for ts, users in self.stages:
+#                 if t >= ts:
+#                     target_users = users
+#                 else:
+#                     break
+
+#             return (target_users, self.spawn_rate)
+# ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: stresstestob-locustfile
+  namespace: loadgenerator
+data:
+  locustfile.py: |
+    #!/usr/bin/python
+    import random
+    from locust import FastHttpUser, TaskSet, between
+    from faker import Faker
+    import datetime
+    fake = Faker()
+
+    products = [
+        '0PUK6V6EV0',
+        '1YMWWN1N4O',
+        '2ZYFJ3GM2N',
+        '66VCHSJNUP',
+        '6E92ZMYYFZ',
+        '9SIQT8TOJO',
+        'L9ECAV7KIM',
+        'LS4PSXUNUM',
+        'OLJCESPC7Z']
+
+    def index(l):
+        l.client.get("/")
+
+    def setCurrency(l):
+        currencies = ['EUR', 'USD', 'JPY', 'CAD', 'GBP', 'TRY']
+        l.client.post("/setCurrency",
+            {'currency_code': random.choice(currencies)})
+
+    def browseProduct(l):
+        l.client.get("/product/" + random.choice(products))
+
+    def viewCart(l):
+        l.client.get("/cart")
+
+    def addToCart(l):
+        product = random.choice(products)
+        l.client.get("/product/" + product)
+        l.client.post("/cart", {
+            'product_id': product,
+            'quantity': random.randint(1,10)})
+        
+    def empty_cart(l):
+        l.client.post('/cart/empty')
+
+    def checkout(l):
+        addToCart(l)
+        current_year = datetime.datetime.now().year+1
+        l.client.post("/cart/checkout", {
+            'email': fake.email(),
+            'street_address': fake.street_address(),
+            'zip_code': fake.zipcode(),
+            'city': fake.city(),
+            'state': fake.state_abbr(),
+            'country': fake.country(),
+            'credit_card_number': fake.credit_card_number(card_type="visa"),
+            'credit_card_expiration_month': random.randint(1, 12),
+            'credit_card_expiration_year': random.randint(current_year, current_year + 70),
+            'credit_card_cvv': f"{random.randint(100, 999)}",
+        })
+        
+    def logout(l):
+        l.client.get('/logout')  
+
+
+    class UserBehavior(TaskSet):
+
+        def on_start(self):
+            index(self)
+
+        tasks = {index: 1,
+            setCurrency: 2,
+            browseProduct: 10,
+            addToCart: 2,
+            viewCart: 3,
+            checkout: 1}
+
+    class WebsiteUser(FastHttpUser):
+        tasks = [UserBehavior]
+        wait_time = between(0.5, 2)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loadgenerator-gaussian
+  namespace: loadgenerator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loadgenerator-gaussian
+  template:
+    metadata:
+      labels:
+        app: loadgenerator-gaussian
+    spec:
+      containers:
+        - name: main
+          image: gcr.io/google-samples/microservices-demo/loadgenerator:v0.10.0
+          # Override the baked ENTRYPOINT so we do NOT pass -u / -r
+          command: ['locust']
+          args: ['--host=https://frontend.edd2devops.net', '--headless', '-u', '800', '-r', '200']
+          env:
+            - name: FRONTEND_ADDR
+              value: frontend.online-boutique.svc.cluster.local:80
+          volumeMounts:
+            - name: locustfile
+              mountPath: /loadgen/locustfile.py
+              subPath: locustfile.py
+          resources:
+            requests:
+              cpu: '250m'
+              memory: '256Mi'
+      volumes:
+        - name: locustfile
+          configMap:
+            name: stresstestob-locustfile

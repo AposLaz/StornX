@@ -1,0 +1,11 @@
+apiVersion: k6.io/v1alpha1
+kind: TestRun
+metadata:
+  name: loadgenerator-2-app
+spec:
+  parallelism: 1
+  script:
+    configMap:
+      name: loadgenerator-2-app
+      file: 2-app.ts
+  arguments: '--env HELLO_PROXY_ADDR=proxy-svc-1.2-app.svc.cluster.local'

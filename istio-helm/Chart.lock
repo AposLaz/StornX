@@ -1,0 +1,15 @@
+dependencies:
+- name: base
+  repository: https://istio-release.storage.googleapis.com/charts
+  version: 1.24.3
+- name: istiod
+  repository: https://istio-release.storage.googleapis.com/charts
+  version: 1.24.3
+- name: prometheus
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 27.4.0
+- name: kube-netlag
+  repository: https://aposlaz.github.io/kube-netlag
+  version: 1.0.0
+digest: sha256:21128d59cee02199394d682a95f1299bc5922b29b5911362f2df0438d6dc10f9
+generated: "2025-03-28T09:35:48.9468909+02:00"

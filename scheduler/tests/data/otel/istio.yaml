@@ -1,0 +1,153 @@
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: fraud-detection
+  namespace: otel-demo
+spec:
+  host: fraud-detection.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: image-provider
+  namespace: otel-demo
+spec:
+  host: image-provider.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: payment
+  namespace: otel-demo
+spec:
+  host: payment.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: product-catalog
+  namespace: otel-demo
+spec:
+  host: product-catalog.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: quote
+  namespace: otel-demo
+spec:
+  host: quote.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: recommendation
+  namespace: otel-demo
+spec:
+  host: recommendation.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: shipping
+  namespace: otel-demo
+spec:
+  host: shipping.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: accounting
+  namespace: otel-demo
+spec:
+  host: accounting.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: ad
+  namespace: otel-demo
+spec:
+  host: ad.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: cart
+  namespace: otel-demo
+spec:
+  host: cart.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: checkout
+  namespace: otel-demo
+spec:
+  host: checkout.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: currency
+  namespace: otel-demo
+spec:
+  host: currency.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: email
+  namespace: otel-demo
+spec:
+  host: email.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM
+---
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: flagd
+  namespace: otel-demo
+spec:
+  host: flagd.otel-demo.svc.cluster.local
+  trafficPolicy:
+    loadBalancer:
+      simple: RANDOM

@@ -1,0 +1,416 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aplaz
+spec:
+  selector:
+    matchLabels:
+      app: hello-world
+  replicas: 8
+  template:
+    metadata:
+      # annotations:
+      #   sidecar.istio.io/proxyCPU: "100m"
+      #   sidecar.istio.io/proxyCPULimit: "200m"
+      labels:
+        app: hello-world
+        version: aplaz-v1
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: hello-world
+          image: alazidis/hello-world
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 4000
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 300m
+              memory: 400Mi
+          # env:
+          #   - name: BURN_CPU_MS
+          #     value: '2'
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 30
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 4000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 30
+            failureThreshold: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-svc
+spec:
+  selector:
+    app: hello-world
+  ports:
+    - name: http
+      port: 80
+      targetPort: 4000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: aplaz-proxy-1
+spec:
+  selector:
+    matchLabels:
+      app: hello-proxy-1
+  replicas: 11
+  template:
+    metadata:
+      # annotations:
+      #   sidecar.istio.io/proxyCPU: "100m"
+      #   sidecar.istio.io/proxyCPULimit: "200m"
+      labels:
+        app: hello-proxy-1
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: hello-proxy
+          image: alazidis/hello-proxy
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: URL
+              value: "hello-svc.2-app.svc.cluster.local"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 100Mi
+            limits:
+              cpu: 200m
+              memory: 300Mi
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 30
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 30
+            failureThreshold: 5
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy-svc-1
+spec:
+  selector:
+    app: hello-proxy-1
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: aplaz-proxy-2
+# spec:
+#   selector:
+#     matchLabels:
+#       app: hello-proxy-2
+#   replicas: 1
+#   template:
+#     metadata:
+#       # annotations:
+#       #   sidecar.istio.io/proxyCPU: "100m"
+#       #   sidecar.istio.io/proxyCPULimit: "200m"
+#       labels:
+#         app: hello-proxy-2
+#     spec:
+#       containers:
+#         - name: hello-proxy
+#           image: alazidis/hello-proxy
+#           ports:
+#             - containerPort: 3000
+#           env:
+#             - name: URL
+#               value: "hello-svc.2-app.svc.cluster.local"
+#           resources:
+#             requests:
+#               cpu: 100m
+#               memory: 100Mi
+#             limits:
+#               cpu: 400m
+#               memory: 200Mi
+#           readinessProbe:
+#             httpGet:
+#               path: /
+#               port: 3000
+#             initialDelaySeconds: 5
+#             periodSeconds: 10
+#             timeoutSeconds: 20
+#             failureThreshold: 3
+
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: proxy-svc-2
+# spec:
+#   selector:
+#     app: hello-proxy-2
+#   ports:
+#     - protocol: TCP
+#       port: 80
+#       targetPort: 3000
+# ---
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-proxy-config
+data:
+  nginx.conf: |          
+    worker_processes 1;
+    error_log /var/log/nginx/error.log info;
+
+    events { worker_connections 1024; }
+
+    http {
+      server_tokens off;
+
+      # Preserve scheme from edge (prevents 426)
+      map $http_x_forwarded_proto $merged_xfp { default $http_x_forwarded_proto; "" $scheme; }
+      map $http_x_forwarded_port  $merged_xfp_port { default $http_x_forwarded_port; "" $server_port; }
+
+      upstream app_backend {
+        server proxy-svc-1.2-app.svc.cluster.local:80;
+        keepalive 32;
+      }
+
+      log_format main '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+      access_log /var/log/nginx/access.log main;
+
+      server {
+        listen 80;
+
+        # Probes
+        location = /healthz { access_log off; return 200; }
+        location = /readyz  { access_log off; return 200; }
+
+        location / {
+          # use the internal Service as Host so Istio sees a registry service
+          proxy_set_header Host $proxy_host;                     # or "proxy-svc-1.2-app.svc.cluster.local"
+          # keep the external host for the app, if it cares about it
+          proxy_set_header X-Forwarded-Host $host;
+          # (keep your existing X-Forwarded-Proto / -For headers)
+          proxy_set_header X-Forwarded-Proto $merged_xfp;        # from earlier map
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+
+          proxy_http_version 1.1;
+          proxy_set_header Connection "";
+
+          proxy_pass http://app_backend;
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-proxy
+spec:
+  replicas: 11
+  selector:
+    matchLabels:
+      app: nginx-proxy
+  template:
+    metadata:
+      labels:
+        app: nginx-proxy
+    spec:
+      imagePullSecrets:
+        - name: regcred
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf
+          resources:
+            requests:
+              cpu: 50m
+              memory: 100Mi
+            limits:
+              cpu: 100m
+              memory: 200Mi
+          # Give NGINX time to start before liveness is evaluated
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            failureThreshold: 30
+            periodSeconds: 2
+
+          # NGINX process health
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 30
+            failureThreshold: 5
+
+          # App readiness (verifies upstream is reachable)
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
+            timeoutSeconds: 30
+            failureThreshold: 5
+
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: nginx-proxy-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-proxy
+  namespace: 2-app
+spec:
+  type: ClusterIP
+  selector:
+    app: nginx-proxy
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+
+
+# ---
+# apiVersion: networking.istio.io/v1alpha3
+# kind: Gateway
+# metadata:
+#   name: nginx-gateway
+# spec:
+#   selector:
+#     istio: ingressgateway
+#   servers:
+#     - port:
+#         number: 80
+#         name: http
+#         protocol: HTTP
+#       hosts:
+#         - "*"
+# ---
+# apiVersion: networking.istio.io/v1alpha3
+# kind: VirtualService
+# metadata:
+#   name: aplaz-ingress
+# spec:
+#   hosts:
+#     - "*"
+#   gateways:
+#     - nginx-gateway
+#   http:
+#     - route:
+#         - destination:
+#             host: proxy-svc
+#             port:
+#               number: 80
+# ---
+# apiVersion: networking.istio.io/v1alpha3
+# kind: VirtualService
+# metadata:
+#   name: aplaz-traffic-split
+# spec:
+#   hosts:
+#     - hello-svc
+#   http:
+#     - route:
+#         - destination:
+#             host: hello-svc
+#             port:
+#               number: 80
+# ---
+
+# apiVersion: networking.istio.io/v1alpha3
+# kind: VirtualService
+# metadata:
+#   name: aplaz-vr
+# spec:
+#   hosts:
+#   - aplaz-664975df99-mpdtl.hello-aplaz.default.svc.cluster.local
+#   - aplaz-664975df99-n6kfx.hello-aplaz.default.svc.cluster.local
+#   - aplaz-664975df99-x229w.hello-aplaz.default.svc.cluster.local
+#   http:
+#   - route:
+#     - destination:
+#         host: aplaz-664975df99-mpdtl.hello-aplaz.default.svc.cluster.local
+#         subset: v1
+#       weight: 0
+#     - destination:
+#         host: aplaz-664975df99-n6kfx.hello-aplaz.default.svc.cluster.local
+#         subset: v2
+#       weight: 0
+#     - destination:
+#         host: aplaz-664975df99-x229w.hello-aplaz.default.svc.cluster.local
+#         subset: v3
+#       weight: 100
+
+# kubectl logs -f aplaz-578577fb77-4k5wb
+# kubectl logs -f aplaz-578577fb77-kbw5g
+# kubectl logs -f aplaz-578577fb77-zsjwk
+# kubectl logs -f aplaz-578577fb77-zssmj
+
+# topology.kubernetes.io/region=europe-west8
+# nodes => gke-cluster-1-default-pool-b5bef915-zj3m | zone => zone=europe-west8-c || PODS => aplaz-proxy-765654f76c-q92f6, aplaz-667c69f547-hkfwr
+# nodes => gke-cluster-1-default-pool-ae608db0-qzd4 | zone => zone=europe-west8-a || PODS => aplaz-proxy-765654f76c-ffh8c, aplaz-667c69f547-r57qx
+# nodes => gke-cluster-1-default-pool-b5bef915-7cvf | zone => zone=europe-west8-c || PODS => aplaz-667c69f547-pd845, aplaz-667c69f547-6q88k
+# nodes => gke-cluster-1-default-pool-ae608db0-98kp | zone => zone=europe-west8-a || PODS => aplaz-667c69f547-9kchc, aplaz-proxy-765654f76c-bbdtx
+# latency
+# histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket{destination_workload="aplaz",pod="aplaz-6f897ccb84-lrbkn"}[50m])) by (le))
+
+# upstream pods - a = 2, dm pods = 2
+# upstream pods - c = 1, dm pods = 3
+
+# need = 3/5, zoneAneed = 1 > 3/5 => alloc = 3/5/2 = 0.3
+# need = 3/5, zoneBneed = 1/3 < 3/5 => alloc = 1/3 = 0.33,
+
+# for i in {1..3000}; do
+#   curl -s http://localhost:3333 > /dev/null &
+#   sleep 2
+# done
+
+# # Wait for all background processes to finish
+# wait

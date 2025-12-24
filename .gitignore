@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+docs/
+istio-1.22.0/
+hello-world/
+destinationRules/*.yaml
+locust/
