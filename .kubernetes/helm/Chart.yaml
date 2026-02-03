@@ -1,24 +1,50 @@
 apiVersion: v2
-name: helm
-description: A Helm chart for Kubernetes
+name: stornx
+description: StornX - Kubernetes Resource Optimization and Balancing Controller
 
-# A chart can be either an 'application' or a 'library' chart.
-#
-# Application charts are a collection of templates that can be packaged into versioned archives
-# to be deployed.
-#
-# Library charts provide useful utilities or functions for the chart developer. They're included as
-# a dependency of application charts to inject those utilities and functions into the rendering
-# pipeline. Library charts do not define any templates and therefore cannot be deployed.
 type: application
 
-# This is the chart version. This version number should be incremented each time you make changes
-# to the chart and its templates, including the app version.
-# Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.1.0
+# Chart version - increment on chart changes
+version: 1.0.0
 
-# This is the version number of the application being deployed. This version number should be
-# incremented each time you make changes to the application. Versions are not expected to
-# follow Semantic Versioning. They should reflect the version the application is using.
-# It is recommended to use it with quotes.
-appVersion: "1.16.0"
+# Application version
+appVersion: "1.0.0"
+
+keywords:
+  - kubernetes
+  - scheduler
+  - autoscaler
+  - traffic-management
+  - resource-optimization
+  - istio
+  - prometheus
+  - load-balancing
+
+home: https://github.com/AposLaz/StornX
+
+maintainers:
+  - name: Apostolos Lazidis
+    email: aplazidis@gmail.com
+
+sources:
+  - https://github.com/AposLaz/StornX
+
+# Artifact Hub annotations
+annotations:
+  category: Infrastructure
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/signKey: |
+    fingerprint: ""
+    url: ""
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial release of StornX Helm chart
+  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/prerelease: "false"
+  artifacthub.io/recommendations: |
+    - url: https://artifacthub.io/packages/helm/prometheus-community/prometheus
+  artifacthub.io/links: |
+    - name: Documentation
+      url: https://github.com/AposLaz/StornX/blob/main/.kubernetes/helm/README.md
+    - name: Source
+      url: https://github.com/AposLaz/StornX

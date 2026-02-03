@@ -1,0 +1,63 @@
+{{- if .Values.rbac.create -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "stornx.clusterRoleName" . }}
+  labels:
+    {{- include "stornx.labels" . | nindent 4 }}
+rules:
+  # Core API - Pods
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "update", "patch", "delete"]
+  
+  # Core API - Nodes
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/status"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  
+  # Metrics API - Pod metrics
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  
+  # Custom Metrics API
+  - apiGroups: ["custom.metrics.k8s.io"]
+    resources: ["*"]
+    verbs: ["get", "list", "watch"]
+  
+  # Apps API - Deployments and ReplicaSets
+  - apiGroups: ["apps"]
+    resources: ["replicasets", "deployments"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  
+  # Apps API - Deployment scaling
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "update", "patch"]
+  
+  # Batch API - Jobs and CronJobs
+  - apiGroups: ["batch"]
+    resources: ["*"]
+    verbs: ["*"]
+  
+  # Extensions API (legacy)
+  - apiGroups: ["extensions"]
+    resources: ["*"]
+    verbs: ["*"]
+  
+  # Networking API
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["*"]
+    verbs: ["*"]
+  
+  # RBAC API
+  - apiGroups: ["rbac.authorization.k8s.io"]
+    resources: ["*"]
+    verbs: ["*"]
+  
+  # Istio Networking - DestinationRules
+  - apiGroups: ["networking.istio.io"]
+    resources: ["destinationrules"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+{{- end }}

@@ -21,3 +21,19 @@
 .idea/
 *.tmproj
 .vscode/
+
+# Documentation (included in chart but not in package)
+README.md
+CHANGELOG.md
+
+# CI/CD files
+.github/
+.gitlab-ci.yml
+Jenkinsfile
+
+# Testing
+tests/
+*.test.yaml
+
+# Development files
+values-development.yaml

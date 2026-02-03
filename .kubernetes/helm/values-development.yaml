@@ -1,0 +1,48 @@
+# Development values for StornX Helm chart
+# Use: helm install stornx . -f values-development.yaml
+
+replicaCount: 1
+
+image:
+  repository: alazidis/stornx
+  pullPolicy: Always
+  tag: "latest"
+
+imagePullSecrets:
+  - name: regcred
+
+config:
+  env: development
+  appPort: 3000
+  namespaces: "default"
+  prometheusUrl: "http://prometheus.istio-system.svc.cluster.local:9090"
+  cronjobExpression: "* * * * *"  # Every minute for faster feedback
+  metricsType: "memory"
+  metricsUpperThreshold: "60"
+  metricsLowerThreshold: "10"
+
+resources:
+  limits:
+    cpu: 250m
+    memory: 256Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 5
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 3
+  periodSeconds: 5
+  failureThreshold: 5
+
+startupProbe:
+  enabled: false
+
+persistence:
+  enabled: false

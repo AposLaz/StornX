@@ -1,15 +1,22 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: "{{ include "helm.fullname" . }}-test-connection"
+  name: "{{ include "stornx.fullname" . }}-test-health"
+  namespace: {{ include "stornx.namespace" . }}
   labels:
-    {{- include "helm.labels" . | nindent 4 }}
+    {{- include "stornx.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
+  serviceAccountName: {{ include "stornx.serviceAccountName" . }}
   containers:
-    - name: wget
-      image: busybox
-      command: ['wget']
-      args: ['{{ include "helm.fullname" . }}:{{ .Values.service.port }}']
+    - name: health-check
+      image: busybox:1.36
+      command: ['sh', '-c']
+      args:
+        - |
+          echo "Testing StornX health endpoint..."
+          wget -q -O- http://{{ include "stornx.fullname" . }}:{{ .Values.config.appPort }}/health || exit 1
+          echo "Health check passed!"
   restartPolicy: Never

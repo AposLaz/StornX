@@ -1,107 +1,182 @@
-# Default values for helm.
+# Default values for StornX Helm chart
 # This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
 
+# -- Number of replicas
 replicaCount: 1
 
+# -- Application image configuration
 image:
-  repository: nginx
-  pullPolicy: IfNotPresent
-  # Overrides the image tag whose default is the chart appVersion.
-  tag: ""
+  repository: alazidis/stornx
+  pullPolicy: Always
+  # -- Overrides the image tag whose default is the chart appVersion
+  tag: "latest"
 
-imagePullSecrets: []
+# -- Image pull secrets for private registries
+imagePullSecrets:
+  - name: regcred
+
+# -- Override the name of the chart
 nameOverride: ""
+# -- Override the full name of the chart
 fullnameOverride: ""
 
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Automatically mount a ServiceAccount's API credentials?
-  automount: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
+# -- Namespace to deploy StornX (will be created if doesn't exist)
+namespace: stornx
 
+# =============================================================================
+# Application Configuration
+# =============================================================================
+config:
+  # -- Environment mode (production, development, staging)
+  env: production
+  
+  # -- Application port
+  appPort: 3000
+  
+  # -- Comma-separated list of namespaces to monitor
+  namespaces: "online-boutique"
+  
+  # -- Prometheus URL for metrics collection
+  prometheusUrl: "http://prometheus.istio-system.svc.cluster.local:9090"
+  
+  # -- Cron expression for scheduling optimization jobs
+  cronjobExpression: "* * * * *"
+  
+  # -- Type of metrics to use for scaling decisions (cpu, memory)
+  metricsType: "memory"
+  
+  # -- Upper threshold percentage for scaling up
+  metricsUpperThreshold: "70"
+  
+  # -- Lower threshold percentage for scaling down
+  metricsLowerThreshold: "20"
+
+# -- Additional environment variables
+extraEnv: []
+#  - name: CUSTOM_VAR
+#    value: "custom-value"
+#  - name: SECRET_VAR
+#    valueFrom:
+#      secretKeyRef:
+#        name: my-secret
+#        key: secret-key
+
+# =============================================================================
+# Service Account & RBAC
+# =============================================================================
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+  # -- Annotations to add to the service account
+  annotations: {}
+  # -- The name of the service account to use
+  name: "stornx-sa"
+
+rbac:
+  # -- Specifies whether RBAC resources should be created
+  create: true
+  # -- Name for the ClusterRole
+  clusterRoleName: "stornx-role"
+  # -- Name for the ClusterRoleBinding
+  clusterRoleBindingName: "stornx-binding"
+
+# =============================================================================
+# Pod Configuration
+# =============================================================================
 podAnnotations: {}
+#  prometheus.io/scrape: "true"
+#  prometheus.io/port: "3000"
+
 podLabels: {}
 
 podSecurityContext: {}
-  # fsGroup: 2000
+#  fsGroup: 2000
 
 securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+#  capabilities:
+#    drop:
+#      - ALL
+#  readOnlyRootFilesystem: true
+#  runAsNonRoot: true
+#  runAsUser: 1000
 
-service:
-  type: ClusterIP
-  port: 80
+# =============================================================================
+# Resource Management
+# =============================================================================
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
 
-ingress:
-  enabled: false
-  className: ""
-  annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
-  hosts:
-    - host: chart-example.local
-      paths:
-        - path: /
-          pathType: ImplementationSpecific
-  tls: []
-  #  - secretName: chart-example-tls
-  #    hosts:
-  #      - chart-example.local
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
+# =============================================================================
+# Health Probes
+# =============================================================================
 livenessProbe:
+  enabled: true
   httpGet:
-    path: /
+    path: /health
     port: http
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
+
 readinessProbe:
+  enabled: true
   httpGet:
-    path: /
+    path: /health
     port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+  successThreshold: 1
 
-autoscaling:
+startupProbe:
   enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 30
+  successThreshold: 1
 
-# Additional volumes on the output Deployment definition.
+# =============================================================================
+# Persistent Volume Claim
+# =============================================================================
+persistence:
+  enabled: false
+  # -- Storage class for PVC
+  storageClassName: ""
+  # -- Access modes for PVC
+  accessModes:
+    - ReadWriteOnce
+  # -- Size of PVC
+  size: 1Gi
+  # -- Annotations for PVC
+  annotations: {}
+  # -- Mount path in the container
+  mountPath: /data
+  # -- Existing PVC name (if using an existing PVC)
+  existingClaim: ""
+
+# =============================================================================
+# Additional Volumes
+# =============================================================================
 volumes: []
-# - name: foo
-#   secret:
-#     secretName: mysecret
-#     optional: false
+#  - name: config
+#    configMap:
+#      name: stornx-config
 
-# Additional volumeMounts on the output Deployment definition.
 volumeMounts: []
-# - name: foo
-#   mountPath: "/etc/foo"
-#   readOnly: true
+#  - name: config
+#    mountPath: /app/config
+#    readOnly: true
 
-nodeSelector: {}
 
-tolerations: []
-
-affinity: {}

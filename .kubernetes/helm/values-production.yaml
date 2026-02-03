@@ -1,0 +1,65 @@
+# Production values for StornX Helm chart
+# Use: helm install stornx . -f values-production.yaml
+
+# IMPORTANT: Only 1 replica to avoid duplicate scheduling decisions
+replicaCount: 1
+
+image:
+  repository: alazidis/stornx
+  pullPolicy: Always
+  tag: "1.0.0"  # Pin to specific version in production
+
+imagePullSecrets:
+  - name: regcred
+
+config:
+  env: production
+  appPort: 3000
+  namespaces: "online-boutique"
+  prometheusUrl: "http://prometheus.istio-system.svc.cluster.local:9090"
+  cronjobExpression: "*/5 * * * *"  # Every 5 minutes in production
+  metricsType: "memory"
+  metricsUpperThreshold: "80"
+  metricsLowerThreshold: "30"
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 15
+  periodSeconds: 20
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  failureThreshold: 3
+
+startupProbe:
+  enabled: true
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  failureThreshold: 30
+
+persistence:
+  enabled: true
+  storageClassName: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 5Gi
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+  capabilities:
+    drop:
+      - ALL
