@@ -3,7 +3,7 @@ entries:
   schedflox:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2025-10-04T09:41:12.537617804+03:00"
+    created: "2026-02-03T20:39:50.956383919Z"
     description: A Helm chart for SchedFloX
     digest: 47ff1254bf19b4ba4e30dccd50a0b083ddd2b6cbd3603c510fa4b2bcb6757124
     maintainers:
@@ -14,6 +14,50 @@ entries:
     - https://github.com/AposLaz/SchedFloX
     type: application
     urls:
-    - https://AposLaz.github.io/SchedFloX/schedflox-1.0.0.tgz
+    - https://aposlaz.github.io/StornX/schedflox-1.0.0.tgz
     version: 1.0.0
-generated: "2025-10-04T09:41:12.536753562+03:00"
+  stornx:
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: Initial release of StornX Helm chart
+      artifacthub.io/containsSecurityUpdates: "false"
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Documentation
+          url: https://github.com/AposLaz/StornX/blob/main/.kubernetes/helm/README.md
+        - name: Source
+          url: https://github.com/AposLaz/StornX
+      artifacthub.io/prerelease: "false"
+      artifacthub.io/recommendations: |
+        - url: https://artifacthub.io/packages/helm/prometheus-community/prometheus
+      artifacthub.io/signKey: |
+        fingerprint: ""
+        url: ""
+      category: Infrastructure
+    apiVersion: v2
+    appVersion: 1.0.0
+    created: "2026-02-03T20:39:50.956967702Z"
+    description: StornX - Kubernetes Resource Optimization and Balancing Controller
+    digest: 50d7196ae4b4f83209f8d1b5cc92995c1b09427edcd0f4dcf1da0cf2a789dddb
+    home: https://github.com/AposLaz/StornX
+    keywords:
+    - kubernetes
+    - scheduler
+    - autoscaler
+    - traffic-management
+    - resource-optimization
+    - istio
+    - prometheus
+    - load-balancing
+    maintainers:
+    - email: aplazidis@gmail.com
+      name: Apostolos Lazidis
+    name: stornx
+    sources:
+    - https://github.com/AposLaz/StornX
+    type: application
+    urls:
+    - https://aposlaz.github.io/StornX/stornx-1.0.0.tgz
+    version: 1.0.0
+generated: "2026-02-03T20:39:50.955790358Z"
