@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: traf-opt-scheduler
+  name: stornx
 spec:
   selector:
     matchLabels:
-      app: traf-opt-scheduler
+      app: stornx
   template:
     metadata:
       labels:
-        app: traf-opt-scheduler
+        app: stornx
     spec:
       imagePullSecrets:
         - name: regcred
-      serviceAccountName: traf-opt-scheduler-sa
+      serviceAccountName: stornx-sa
       containers:
-        - name: traf-opt-scheduler
-          image: alazidis/opt-scheduler:latest
+        - name: stornx
+          image: alazidis/stornx:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

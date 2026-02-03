@@ -1,0 +1,6 @@
+# Artifact Hub repository metadata file
+# https://artifacthub.io/docs/topics/repositories/
+repositoryID: 8a4a55da-f630-4a9d-a364-318d30cc5e39 # Will be assigned by Artifact Hub after registration
+owners:
+  - name: Apostolos Lazidis
+    email: aplazidis@gmail.com
