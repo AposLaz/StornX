@@ -1,3 +1,4 @@
+import { Config } from '../../../config/config.js';
 import { logger } from '../../../config/logger.js';
 import { FaultMapper } from '../mappers.js';
 
@@ -65,7 +66,7 @@ export class FaultTolerance {
     /*
      * Step 4: Find the zones that have replicas.
      */
-    const sizeFaultZones = Math.min(3, assignReplicasToZones.size);
+    const sizeFaultZones = Math.min(Config.faultTolerance.maxZones, assignReplicasToZones.size);
     this.loggerOperation.debug({
       message: 'Calculated fault zones size',
       sizeFaultZones,
@@ -253,18 +254,22 @@ export class FaultTolerance {
     zones: [string, FaultNodesSumReplicas][],
     loadedNodes: { node: string; zone: string }[]
   ): string {
-    let mostLoadedCandidate: { node: string; load: number } | null = null;
+    let mostLoadedCandidate: { node: string; load: number } | undefined = undefined;
     // Iterate through each zone and each node within it
-    zones.forEach(([, data]) => {
-      data.nodes.forEach((n) => {
+    for (const [, data] of zones) {
+      for (const n of data.nodes) {
         const nodeLoad = loadedNodes.findIndex((ln) => ln.node === n.node);
-        const candidate = { node: n.node, load: nodeLoad };
-        if (nodeLoad !== -1 && (!mostLoadedCandidate || candidate.load < mostLoadedCandidate.load)) {
-          mostLoadedCandidate = candidate;
+        if (nodeLoad !== -1 && (!mostLoadedCandidate || nodeLoad < mostLoadedCandidate.load)) {
+          mostLoadedCandidate = { node: n.node, load: nodeLoad };
         }
-      });
-    });
-    return mostLoadedCandidate!.node;
+      }
+    }
+
+    if (!mostLoadedCandidate) {
+      throw new Error('No loaded candidate node found in the provided zones');
+    }
+
+    return mostLoadedCandidate.node;
   }
 
   /**

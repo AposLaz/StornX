@@ -27,6 +27,7 @@ export const Config = {
   APP_PORT: process.env.APP_PORT ?? '3000',
   NAMESPACES: process.env.NAMESPACES?.split(',') ?? ['default'], // default is the default namespace
   CRONJOB_EXPRESSION: process.env.CRONJOB_EXPRESSION ?? '* * * * *',
+  LOCALITY_LABELS_CRON: process.env.LOCALITY_LABELS_CRON ?? '* * * * *',
   metrics: {
     upperThreshold: process.env.METRICS_UPPER_THRESHOLD ? Number(process.env.METRICS_UPPER_THRESHOLD) / 100 : 0.8,
     lowerThreshold: process.env.METRICS_LOWER_THRESHOLD ? Number(process.env.METRICS_LOWER_THRESHOLD) / 100 : 0.2,
@@ -37,4 +38,18 @@ export const Config = {
     },
   },
   prometheusUrl: process.env.PROMETHEUS_URL ?? 'http://prometheus.prometheus.svc.cluster.local:9090',
+  // OptiBalancer settings
+  balancer: {
+    /** Minimum L1 distance delta to trigger a DestinationRule update */
+    minDeltaThreshold: process.env.BALANCER_MIN_DELTA ? Number(process.env.BALANCER_MIN_DELTA) : 10,
+    /** Step size for gradual traffic shift */
+    stepSize: process.env.BALANCER_STEP_SIZE ? Number(process.env.BALANCER_STEP_SIZE) : 5,
+    /** Epsilon for convergence */
+    epsilon: process.env.BALANCER_EPSILON ? Number(process.env.BALANCER_EPSILON) : 1,
+  },
+  // Fault tolerance settings
+  faultTolerance: {
+    /** Maximum number of zones to distribute replicas across for fault tolerance */
+    maxZones: process.env.FT_MAX_ZONES ? Number(process.env.FT_MAX_ZONES) : 3,
+  },
 };

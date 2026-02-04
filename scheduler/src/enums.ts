@@ -11,12 +11,15 @@ export enum Operators {
   EXISTS = 'Exists',
 }
 
-export enum SetupFolderFiles {
-  DEFAULT_PATH = '/opt/data', // TODO add the app path
-  DEPLOYS_PATH = 'deploys',
-  QUEUE_PATH = 'queue',
-  DEPLOYS_FILE = 'deploys.json',
-}
+// Data storage paths - can be overridden via DATA_PATH environment variable
+const DATA_BASE_PATH = process.env.DATA_PATH ?? '/opt/data';
+
+export const SetupFolderFiles = {
+  DEFAULT_PATH: DATA_BASE_PATH,
+  DEPLOYS_PATH: 'deploys',
+  QUEUE_PATH: 'queue',
+  DEPLOYS_FILE: 'deploys.json',
+} as const;
 
 export enum SemaphoreConcLimits {
   MAX_CONCURRENCY = 20,

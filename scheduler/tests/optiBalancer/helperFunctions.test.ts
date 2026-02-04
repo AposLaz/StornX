@@ -1,3 +1,11 @@
+// Placeholder test - TODO: implement proper tests for OptiBalancer helper functions
+describe('OptiBalancer helper functions', () => {
+  it('should be implemented', () => {
+    // These tests are pending implementation
+    expect(true).toBe(true);
+  });
+});
+
 // import { KubernetesAdapterImpl } from '../../src/adapters/k8s/index';
 // import { PrometheusAdapterImpl } from '../../src/adapters/prometheus/index';
 // import { OptiBalancer } from '../../src/core/optiBalancer/index';

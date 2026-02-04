@@ -68,7 +68,6 @@ export class OptiScaler {
       const cNode = ftNodes[0];
 
       const deleteNode = this.optiData.replicaPods.filter((node) => node.node === cNode);
-      console.log(deleteNode);
 
       const removeRandomPod = Math.floor(Math.random() * deleteNode.length);
       const deletePod = deleteNode[removeRandomPod].pod;
@@ -127,8 +126,6 @@ export class OptiScaler {
       })
       .flatMap((n) => n);
 
-    console.log(nodesLatency);
-
     const weights = calculateWeightsUm(upstreamNodes, ftNodes, nodesLatency);
 
     // Filter out edges with zero weight unless the 'to' node is in upstreamNodes,
@@ -137,8 +134,6 @@ export class OptiScaler {
     const prioritizedWeights = weights.filter((w) => upstreamNodeSet.has(w.from));
 
     const sortByLowestWeight = prioritizedWeights.toSorted((a, b) => a.weight - b.weight);
-
-    console.log(sortByLowestWeight);
 
     // return the node with the lowest weight
     return sortByLowestWeight[0].to;
@@ -165,10 +160,7 @@ export class OptiScaler {
       })
       .flatMap((n) => n);
 
-    console.log(nodesLatency);
-
     const weights = calculateWeightsDm(dmNodes, ftNodes, nodesLatency);
-    console.log(weights);
     // Filter out edges with zero weight unless the 'to' node is in dmNodes,
     // effectively prioritizing zero-weight edges that lead to dowsntream nodes
     const dmNodeSet = new Set(dmNodes.map((n) => n.node));

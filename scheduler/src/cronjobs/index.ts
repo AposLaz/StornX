@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 
 import { KubernetesAdapterImpl } from '../adapters/k8s/index.js';
+import { Config } from '../config/config.js';
 import { logger } from '../config/logger.js';
 import { TrafficScheduler } from '../core/index.js';
 
@@ -44,7 +45,7 @@ export const CronInit = (timer: string) => {
 };
 
 export const AddLocalityLabelsToNodes = () => {
-  cron.schedule('* * * * *', async () => {
+  cron.schedule(Config.LOCALITY_LABELS_CRON, async () => {
     try {
       logger.info('Starting addLocalityLabelsToNodes cron job');
       const k8sAdapter = new KubernetesAdapterImpl();

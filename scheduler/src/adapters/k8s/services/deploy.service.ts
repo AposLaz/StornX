@@ -46,18 +46,22 @@ export class DeploymentService {
   async handleDeployReplicas(deployName: string, namespace: string, action: ReplicasAction) {
     const deploy = await this.client.readNamespacedDeployment({ name: deployName, namespace });
 
+    if (!deploy.spec?.replicas) {
+      throw new Error(`Deployment ${deployName} does not have replicas defined in spec`);
+    }
+
     if (action === 'add') {
       logger.info(`Adding 1 replicas to deployment ${deployName}`);
-      deploy.spec!.replicas!++;
+      deploy.spec.replicas++;
     }
     if (action === 'delete') {
       logger.info(`Deleting 1 replicas to deployment ${deployName}`);
-      deploy.spec!.replicas!--;
+      deploy.spec.replicas--;
     }
 
     const patchReplicas = {
       spec: {
-        replicas: deploy.spec!.replicas,
+        replicas: deploy.spec.replicas,
       },
     };
 

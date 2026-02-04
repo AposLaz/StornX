@@ -19,13 +19,16 @@ import type * as k8s from '@kubernetes/client-node';
 
 const k8sMapper = {
   toClusterTopology: (nodes: k8s.V1Node[]): ClusterTopology[] => {
-    return nodes.map((node) => {
-      return {
-        region: node.metadata!.labels!['topology.kubernetes.io/region'],
-        zone: node.metadata!.labels!['topology.kubernetes.io/zone'],
-        node: node.metadata!.labels!['kubernetes.io/hostname'],
-      };
-    });
+    return nodes
+      .filter((node) => node.metadata?.labels)
+      .map((node) => {
+        const labels = node.metadata!.labels!;
+        return {
+          region: labels['topology.kubernetes.io/region'] ?? 'unknown-region',
+          zone: labels['topology.kubernetes.io/zone'] ?? 'unknown-zone',
+          node: labels['kubernetes.io/hostname'] ?? node.metadata!.name ?? 'unknown-node',
+        };
+      });
   },
   toClusterAzTopology: (cluster: ClusterTopology[]): ClusterAzTopology => {
     const assignNodesToZones: ClusterAzTopology = {};

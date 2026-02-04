@@ -2,6 +2,7 @@ import * as k8s from '@kubernetes/client-node';
 
 import { readYamlK8sFilesFromPath } from '../../../common/helpers.js';
 import { logger } from '../../../config/logger.js';
+import { getK8sErrorStatusCode } from '../../../types.js';
 
 export class ResourceService {
   private readonly client: k8s.KubernetesObjectApi;
@@ -47,18 +48,14 @@ export class ResourceService {
         const response = await this.client.patch(resource);
         created.push(`${response.metadata!.name!}:${response.kind}`);
       } catch (error: unknown) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const err = error as any;
-        const statusCode = err.statusCode ?? err.code ?? err.response?.statusCode ?? err.response?.status;
+        const statusCode = getK8sErrorStatusCode(error);
 
         if (Number(statusCode) === 404) {
           // If resource does not exist, create it
           const response = await this.client.create(resource);
           created.push(`${response.metadata!.name!}:${response.kind}`);
         } else {
-          logger.error(
-            `Error creating resource: ${JSON.stringify(resource, null, 2)} / ${JSON.stringify(err.body, null, 2)}`
-          );
+          logger.error(`Error creating resource: ${resource.kind}/${resource.metadata?.name}`, { error });
           notCreated.push(resource);
         }
       }
@@ -119,12 +116,9 @@ export class ResourceService {
           },
           k8s.setHeaderOptions('Content-Type', k8s.PatchStrategy.MergePatch)
         );
-        // console.log(JSON.stringify(response, null, 2));
         logger.info(`Custom Object updated: ${response.metadata.name}`);
       } catch (error: unknown) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const err = error as any;
-        const statusCode = err.statusCode ?? err.code ?? err.response?.statusCode ?? err.response?.status;
+        const statusCode = getK8sErrorStatusCode(error);
 
         if (Number(statusCode) === 404) {
           // Step 3: If not found, CREATE the resource
@@ -137,11 +131,11 @@ export class ResourceService {
           });
           logger.info(`Custom Object created: ${response.metadata.name}`);
         } else {
-          logger.error(`Error applying Custom Object: ${resource.metadata.name} - }`);
+          logger.error(`Error applying Custom Object: ${resource.metadata?.name}`, { error });
         }
       }
     } catch (error) {
-      logger.error(`Failed to apply Custom Object: ${error}`);
+      logger.error(`Failed to apply Custom Object`, { error });
     }
   }
 

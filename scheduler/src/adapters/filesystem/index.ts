@@ -97,7 +97,6 @@ export class FileSystemHandler {
         }
 
         const newData = existingData.filter((item) => !predicate(item));
-        console.log(existingData);
         if (newData.length === existingData.length) {
           logger.warn(`No matching data found to delete in [${deployFile}].`);
           return;

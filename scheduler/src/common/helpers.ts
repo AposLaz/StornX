@@ -13,12 +13,6 @@ export const convertResourcesStringToNumber = (resource: string) => {
   return parseInt(resource.replace(/\D/g, ''), 10);
 };
 
-export const readDataFromFile = (filePath: string) => {
-  const fileData = fs.readFileSync(filePath, 'utf8');
-  const data = JSON.parse(fileData);
-  return data;
-};
-
 /**
  * Reads Kubernetes YAML specs from a specified path, which can be either a file or a directory.
  * @param specPath - The path to the file or directory containing Kubernetes YAML specifications.

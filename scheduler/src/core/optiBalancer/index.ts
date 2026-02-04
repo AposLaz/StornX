@@ -1,6 +1,7 @@
 // optiBalancer/index.ts
 import { TrafficEngine } from './engine.js';
 import { OptiBalancerMapper } from './mapper.js';
+import { Config } from '../../config/config.js';
 import { logger } from '../../config/logger.js';
 
 import type { DestinationRule, DistributedPercentTraffic, OptiScalerType } from './types.js';
@@ -69,14 +70,19 @@ export class OptiBalancer {
 
     // If we have no live DR yet, apply target directly
     const nextDistribute = currentDistribute
-      ? this.engine.stepTowardTarget(currentDistribute, targetDistribute, /*step*/ 5, /*epsilon*/ 1)
+      ? this.engine.stepTowardTarget(
+          currentDistribute,
+          targetDistribute,
+          Config.balancer.stepSize,
+          Config.balancer.epsilon
+        )
       : targetDistribute;
 
-    // Optional: only apply if change is meaningful (sum of absolute diffs ≥ 10)
+    // Optional: only apply if change is meaningful (sum of absolute diffs ≥ threshold)
     const delta = currentDistribute ? this.engine.l1Distance(currentDistribute, nextDistribute) : 100;
 
-    if (delta < 10) {
-      this.loggerOperation.info(`Skip apply (delta=${delta.toFixed(2)} < 10)`);
+    if (delta < Config.balancer.minDeltaThreshold) {
+      this.loggerOperation.info(`Skip apply (delta=${delta.toFixed(2)} < ${Config.balancer.minDeltaThreshold})`);
       return;
     }
 

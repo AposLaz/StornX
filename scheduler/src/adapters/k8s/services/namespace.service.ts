@@ -1,4 +1,5 @@
 import { logger } from '../../../config/logger.js';
+import { getK8sErrorStatusCode } from '../../../types.js';
 import { k8sMapper } from '../mapper.js';
 
 import type * as k8s from '@kubernetes/client-node';
@@ -16,16 +17,14 @@ export class NamespaceService {
 
       logger.info(`New namespace created: ${response.metadata!.name}`);
     } catch (error: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const err = error as any;
-      const statusCode = err.statusCode ?? err.code ?? err.response?.statusCode ?? err.response?.status;
+      const statusCode = getK8sErrorStatusCode(error);
 
       if (Number(statusCode) === 409) {
         logger.info(`Namespace already exists: ${ns}`);
         return;
       }
 
-      logger.error(`Error creating namespace: ${ns} / ${JSON.stringify(err.body.text(), null, 2)}`);
+      logger.error(`Error creating namespace: ${ns}`, { error });
     }
   }
 }
