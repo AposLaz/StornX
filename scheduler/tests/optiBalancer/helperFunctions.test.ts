@@ -50,40 +50,40 @@
 //     },
 //   ];
 
-  // const optiBalancer = new OptiBalancer(k8s, prometheus, MetricsType.CPU);
+//   const optiBalancer = new OptiBalancer(k8s, prometheus, MetricsType.CPU);
 
-  // const result = optiBalancer['groupPodsByNode'](podMetrics);
+//   const result = optiBalancer['groupPodsByNode'](podMetrics);
 
-  // expect(result).toEqual(
-  //   new Map([
-  //     [
-  //       'node1',
-  //       [
-  //         {
-  //           node: 'node1',
-  //           pod: 'replica-1',
-  //           ...commonResources,
-  //         },
-  //         {
-  //           node: 'node1',
-  //           pod: 'replica-2',
-  //           ...commonResources,
-  //         },
-  //       ],
-  //     ],
-  //     [
-  //       'node3',
-  //       [
-  //         {
-  //           node: 'node3',
-  //           pod: 'replica-3',
-  //           ...commonResources,
-  //         },
-  //       ],
-  //     ],
-  //   ])
-  // );
-});
+//   expect(result).toEqual(
+//     new Map([
+//       [
+//         'node1',
+//         [
+//           {
+//             node: 'node1',
+//             pod: 'replica-1',
+//             ...commonResources,
+//           },
+//           {
+//             node: 'node1',
+//             pod: 'replica-2',
+//             ...commonResources,
+//           },
+//         ],
+//       ],
+//       [
+//         'node3',
+//         [
+//           {
+//             node: 'node3',
+//             pod: 'replica-3',
+//             ...commonResources,
+//           },
+//         ],
+//       ],
+//     ])
+//   );
+// });
 // it('perNodeLatency', () => {
 //   expect(true).toBe(true);
 // });
