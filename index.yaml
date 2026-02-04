@@ -3,7 +3,7 @@ entries:
   schedflox:
   - apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-02-03T20:39:50.956383919Z"
+    created: "2026-02-04T16:27:22.642760935Z"
     description: A Helm chart for SchedFloX
     digest: 47ff1254bf19b4ba4e30dccd50a0b083ddd2b6cbd3603c510fa4b2bcb6757124
     maintainers:
@@ -31,15 +31,12 @@ entries:
       artifacthub.io/prerelease: "false"
       artifacthub.io/recommendations: |
         - url: https://artifacthub.io/packages/helm/prometheus-community/prometheus
-      artifacthub.io/signKey: |
-        fingerprint: ""
-        url: ""
       category: Infrastructure
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-02-03T20:39:50.956967702Z"
+    created: "2026-02-04T16:27:22.643384182Z"
     description: StornX - Kubernetes Resource Optimization and Balancing Controller
-    digest: 50d7196ae4b4f83209f8d1b5cc92995c1b09427edcd0f4dcf1da0cf2a789dddb
+    digest: 5e5ddf9d2d51b6a2e301bad40f2a9064535529bcafc724fe5e29dbc7362c29ec
     home: https://github.com/AposLaz/StornX
     keywords:
     - kubernetes
@@ -60,4 +57,4 @@ entries:
     urls:
     - https://aposlaz.github.io/StornX/stornx-1.0.0.tgz
     version: 1.0.0
-generated: "2026-02-03T20:39:50.955790358Z"
+generated: "2026-02-04T16:27:22.642187781Z"
