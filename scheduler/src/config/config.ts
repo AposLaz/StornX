@@ -32,6 +32,8 @@ export const Config = {
     upperThreshold: process.env.METRICS_UPPER_THRESHOLD ? Number(process.env.METRICS_UPPER_THRESHOLD) / 100 : 0.8,
     lowerThreshold: process.env.METRICS_LOWER_THRESHOLD ? Number(process.env.METRICS_LOWER_THRESHOLD) / 100 : 0.2,
     type: (process.env.METRICS_TYPE as MetricsType) ?? MetricsType.MEMORY,
+    /** Target P95 response time threshold in milliseconds. Nodes exceeding this are penalized. */
+    responseTimeThreshold: process.env.RESPONSE_TIME_THRESHOLD ? Number(process.env.RESPONSE_TIME_THRESHOLD) : 100,
     weights: {
       CPU: process.env.CPU_WEIGHT ? Number(process.env.CPU_WEIGHT) : 0.5,
       Memory: process.env.MEMORY_WEIGHT ? Number(process.env.MEMORY_WEIGHT) : 0.5,
@@ -40,10 +42,14 @@ export const Config = {
   prometheusUrl: process.env.PROMETHEUS_URL ?? 'http://prometheus.prometheus.svc.cluster.local:9090',
   // OptiBalancer settings
   balancer: {
-    /** Minimum L1 distance delta to trigger a DestinationRule update */
-    minDeltaThreshold: process.env.BALANCER_MIN_DELTA ? Number(process.env.BALANCER_MIN_DELTA) : 10,
-    /** Step size for gradual traffic shift */
-    stepSize: process.env.BALANCER_STEP_SIZE ? Number(process.env.BALANCER_STEP_SIZE) : 5,
+    /** Minimum L1 distance delta to trigger a DestinationRule update (lowered from 10 to 5) */
+    minDeltaThreshold: process.env.BALANCER_MIN_DELTA ? Number(process.env.BALANCER_MIN_DELTA) : 5,
+    /** Minimum step size for gradual traffic shift (used when delta is small) */
+    minStepSize: process.env.BALANCER_MIN_STEP_SIZE ? Number(process.env.BALANCER_MIN_STEP_SIZE) : 5,
+    /** Maximum step size for urgent traffic shifts (used when delta is large) */
+    maxStepSize: process.env.BALANCER_MAX_STEP_SIZE ? Number(process.env.BALANCER_MAX_STEP_SIZE) : 20,
+    /** Delta threshold at which max step size is applied (urgency scaling) */
+    urgencyThreshold: process.env.BALANCER_URGENCY_THRESHOLD ? Number(process.env.BALANCER_URGENCY_THRESHOLD) : 50,
     /** Epsilon for convergence */
     epsilon: process.env.BALANCER_EPSILON ? Number(process.env.BALANCER_EPSILON) : 1,
   },

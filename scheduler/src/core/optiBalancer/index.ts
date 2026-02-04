@@ -34,11 +34,20 @@ export class OptiBalancer {
       namespace: data.namespace,
     });
 
+    // Fetch P95 response time per node for this deployment
+    const responseTimeData = await this.prom.getResponseTimeByNodeDeployment(data.deployment, data.namespace);
+    const nodeResponseTimes = responseTimeData?.map((rt) => ({
+      node: rt.node,
+      responseTimeMs: rt.responseTime,
+    }));
+
     // --- Compute target distribution (delegated to TrafficEngine) ---
+    // Now includes response time as a primary factor for weight calculation
     const targetList: DistributedPercentTraffic[] = this.engine.calculateTraffic(
       data.replicaPods,
       upstream,
-      data.nodesLatency
+      data.nodesLatency,
+      nodeResponseTimes
     );
 
     const serviceName = upstream[0].destinations[0].destination_service_name;
@@ -69,11 +78,14 @@ export class OptiBalancer {
     const targetDistribute = this.engine.percentListToDistribute(targetList);
 
     // If we have no live DR yet, apply target directly
+    // Otherwise use adaptive stepping (larger steps when urgency is high)
     const nextDistribute = currentDistribute
       ? this.engine.stepTowardTarget(
           currentDistribute,
           targetDistribute,
-          Config.balancer.stepSize,
+          Config.balancer.minStepSize,
+          Config.balancer.maxStepSize,
+          Config.balancer.urgencyThreshold,
           Config.balancer.epsilon
         )
       : targetDistribute;

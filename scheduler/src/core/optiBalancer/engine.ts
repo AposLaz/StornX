@@ -1,6 +1,7 @@
+import { Config } from '../../config/config.js';
 import { MetricsType } from '../../enums.js';
 
-import type { DistributedPercentTraffic, NormalizedTraffic, TrafficWeights } from './types.js';
+import type { DistributedPercentTraffic, NodeResponseTime, NormalizedTraffic, TrafficWeights } from './types.js';
 import type { PodMetrics } from '../../adapters/k8s/types.js';
 import type { GraphDataRps, NodesLatency } from '../../adapters/prometheus/types.js';
 
@@ -11,10 +12,20 @@ export class TrafficEngine {
     this.metricType = metricType;
   }
 
+  /**
+   * Calculate traffic distribution based on latency, load, replicas, and response time.
+   *
+   * New formula with response time:
+   * weight = (1 - responseTimePenalty) * (1 - normalizedLatency) * normalizedPodsLength * (1 - normalizedLoad)
+   *
+   * Where responseTimePenalty = min(0.9, nodeP95 / targetResponseTime)
+   * This heavily penalizes nodes with high response times.
+   */
   public calculateTraffic(
     replicaPods: PodMetrics[],
     upstream: GraphDataRps[],
-    nodesLatency: NodesLatency[]
+    nodesLatency: NodesLatency[],
+    nodeResponseTimes?: NodeResponseTime[]
   ): DistributedPercentTraffic[] {
     const podsPerNode = this.groupPodsByNode(replicaPods);
     const uniqueNodes = Array.from(podsPerNode.keys());
@@ -25,6 +36,14 @@ export class TrafficEngine {
     const avgTotalLoad = rawTotalLoad / totalReplicas || 0;
 
     const totalLatency = uniqueNodes.reduce((acc, n) => acc + this.totalLatency(upstream, n, nodesLatency), 0);
+
+    // Build response time lookup map
+    const responseTimeMap = new Map<string, number>();
+    if (nodeResponseTimes) {
+      for (const rt of nodeResponseTimes) {
+        responseTimeMap.set(rt.node, rt.responseTimeMs);
+      }
+    }
 
     const weights: TrafficWeights[] = [];
 
@@ -37,6 +56,11 @@ export class TrafficEngine {
       const loadRatio = isNaN(loadRatioRaw) || loadRatioRaw >= 1 ? 1 : loadRatioRaw;
       const normalizedLoad = Math.min(0.9, loadRatio);
 
+      // Calculate response time penalty for this node (absolute, not relative)
+      const nodeResponseTime = responseTimeMap.get(node) ?? 0;
+      const targetResponseTime = Config.metrics.responseTimeThreshold;
+      const responseTimePenalty = this.calculateResponseTimePenalty(nodeResponseTime, targetResponseTime);
+
       for (const nl of nodesLatencyPerNode) {
         const normalizedPodsLength = podsWithinNode.length / totalReplicas;
 
@@ -44,7 +68,9 @@ export class TrafficEngine {
         const latencyRatio = isNaN(latencyRatioRaw) || latencyRatioRaw < 0 ? 0 : latencyRatioRaw;
         const normalizedLatency = Math.min(0.9, latencyRatio);
 
-        const weight = (1 - normalizedLatency) * normalizedPodsLength * (1 - normalizedLoad);
+        // New weight formula: response time penalty is the PRIMARY factor
+        const weight =
+          (1 - responseTimePenalty) * (1 - normalizedLatency) * normalizedPodsLength * (1 - normalizedLoad);
         weights.push({ from: nl.from, to: nl.to, weight });
       }
     }
@@ -62,7 +88,7 @@ export class TrafficEngine {
       normalizedTraffic: w.weight / totalWeights,
     }));
 
-    const withLocalShare = this.enforcePerFromLocalShare(normalizedTraffic, 0.35);
+    const withLocalShare = this.enforcePerFromLocalShare(normalizedTraffic, 0.35, podsPerNode);
     return this.convertTrafficDistributionToPercentages(withLocalShare);
   }
 
@@ -100,12 +126,30 @@ export class TrafficEngine {
     return out;
   }
 
+  /**
+   * Gradually moves current distribution toward target.
+   * Uses adaptive step size: larger steps when delta is extreme (urgency).
+   *
+   * @param current - Current traffic distribution
+   * @param target - Target traffic distribution
+   * @param minStep - Minimum step size (default 5%)
+   * @param maxStep - Maximum step size for urgent changes (default 20%)
+   * @param urgencyThreshold - Delta at which max step is used (default 50)
+   * @param epsilon - Ignore differences smaller than this (default 1%)
+   */
   public stepTowardTarget(
     current: Array<{ from: string; to: Record<string, number> }>,
     target: Array<{ from: string; to: Record<string, number> }>,
-    step = 5, // ≤5% change per edge per apply
-    epsilon = 1 // ignore <1% noise
+    minStep = 5,
+    maxStep = 20,
+    urgencyThreshold = 50,
+    epsilon = 1
   ) {
+    // Calculate delta to determine urgency
+    const delta = this.l1Distance(current, target);
+    // Adaptive step: scales from minStep to maxStep based on urgency
+    const urgency = Math.min(1, delta / urgencyThreshold);
+    const step = minStep + urgency * (maxStep - minStep);
     const curByFrom = new Map(current.map((x) => [x.from, x.to]));
     const tgtByFrom = new Map(target.map((x) => [x.from, x.to]));
     const froms = new Set([...curByFrom.keys(), ...tgtByFrom.keys()]);
@@ -228,7 +272,12 @@ export class TrafficEngine {
   }
 
   // Scale local vs cross per `from`, preserving proportions within each bucket.
-  private enforcePerFromLocalShare(edges: NormalizedTraffic[], minLocalShare = 0.7): NormalizedTraffic[] {
+  // Only enforce minimum local share if local node has >= replicas than upstream.
+  private enforcePerFromLocalShare(
+    edges: NormalizedTraffic[],
+    minLocalShare = 0.7,
+    podsPerNode?: Map<string, PodMetrics[]>
+  ): NormalizedTraffic[] {
     // group by from node
     const grouped = new Map<string, NormalizedTraffic[]>();
     for (const e of edges) {
@@ -238,13 +287,16 @@ export class TrafficEngine {
 
     const result: NormalizedTraffic[] = [];
 
-    for (const [, list] of grouped) {
+    for (const [fromNode, list] of grouped) {
       const total = list.reduce((a, b) => a + b.normalizedTraffic, 0) || 1;
       const local = list.find((e) => e.from === e.to);
       const localShare = local ? local.normalizedTraffic / total : 0;
 
-      // only boost if below threshold
-      if (localShare < minLocalShare && local) {
+      // Check if local node has enough replicas to justify enforcing local share
+      const shouldEnforceLocalShare = this.shouldEnforceLocalShare(fromNode, podsPerNode);
+
+      // only boost if below threshold AND local has sufficient replicas
+      if (localShare < minLocalShare && local && shouldEnforceLocalShare) {
         const deficit = minLocalShare - localShare;
 
         // reduce non-local edges proportionally
@@ -272,5 +324,68 @@ export class TrafficEngine {
     }
 
     return result;
+  }
+
+  /**
+   * Determines if the minimum local share rule should be enforced for a given source node.
+   * The rule is only enforced if the local (downstream) node has equal or more replicas
+   * than the average of other nodes. This prevents forcing traffic to stay local when
+   * the local node has insufficient capacity.
+   */
+  private shouldEnforceLocalShare(fromNode: string, podsPerNode?: Map<string, PodMetrics[]>): boolean {
+    if (!podsPerNode) return true; // fallback to original behavior if no data
+
+    const localReplicas = podsPerNode.get(fromNode)?.length ?? 0;
+    if (localReplicas === 0) return false; // no local pods, can't enforce local share
+
+    // Get max replicas across all other nodes
+    let maxOtherReplicas = 0;
+    for (const [node, pods] of podsPerNode) {
+      if (node !== fromNode && pods.length > maxOtherReplicas) {
+        maxOtherReplicas = pods.length;
+      }
+    }
+
+    // Only enforce local share if local replicas >= max replicas of other nodes
+    return localReplicas >= maxOtherReplicas;
+  }
+
+  /**
+   * Calculate response time penalty using absolute thresholds.
+   * Unlike load/latency which are relative, response time uses absolute values.
+   *
+   * Penalty curve:
+   * - Below target: 0 penalty (full weight)
+   * - At target: 0.5 penalty (half weight)
+   * - At 2x target: 0.75 penalty (quarter weight)
+   * - At 3x+ target: 0.9 penalty (capped, never fully exclude)
+   *
+   * @param responseTimeMs - P95 response time in milliseconds
+   * @param targetMs - Target response time threshold (e.g., 100ms)
+   * @returns Penalty between 0 (good) and 0.9 (bad)
+   */
+  private calculateResponseTimePenalty(responseTimeMs: number, targetMs: number): number {
+    if (responseTimeMs <= 0 || targetMs <= 0) {
+      return 0; // no penalty if no data or invalid target
+    }
+
+    // Response time ratio: how many times over target
+    const ratio = responseTimeMs / targetMs;
+
+    if (ratio <= 1) {
+      // Below or at target: no penalty
+      return 0;
+    }
+
+    // Logarithmic penalty: grows quickly at first, then tapers off
+    // penalty = 1 - 1/(1 + ln(ratio))
+    // At ratio=2: penalty ≈ 0.41
+    // At ratio=3: penalty ≈ 0.52
+    // At ratio=5: penalty ≈ 0.62
+    // At ratio=10: penalty ≈ 0.70
+    const penalty = 1 - 1 / (1 + Math.log(ratio));
+
+    // Cap at 0.9 to never fully exclude a node
+    return Math.min(0.9, penalty);
   }
 }

@@ -1,5 +1,13 @@
 import type { ClusterTopology, PodMetrics } from '../../adapters/k8s/types.js';
-import type { NodesLatency } from '../../adapters/prometheus/types.js';
+import type { NodesLatency, DeploymentResponseTime } from '../../adapters/prometheus/types.js';
+
+/**
+ * Response time per node (P95 in milliseconds)
+ */
+export type NodeResponseTime = {
+  node: string;
+  responseTimeMs: number;
+};
 
 export type OptiScalerType = {
   deployment: string;
@@ -7,6 +15,8 @@ export type OptiScalerType = {
   replicaPods: PodMetrics[];
   nodesLatency: NodesLatency[];
   clusterTopology: ClusterTopology[];
+  /** Optional: P95 response time per node in milliseconds */
+  nodeResponseTimes?: NodeResponseTime[];
 };
 
 export type FromToNode = { from: string; to: string };
