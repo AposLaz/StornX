@@ -1,8 +1,8 @@
-version: '3'
+version: "3"
 
 services:
-  lpa-controller:
-    container_name: lpa-controller
+  stornx:
+    container_name: stornx
     build:
       context: ../
       dockerfile: ./.docker/Dockerfile
@@ -14,4 +14,4 @@ services:
       - KUBECONFIG=/root/.kube/config
       - MINIKUBE_HOME=/root/.minikube
     ports:
-      - '3000:3000' # Map port 3000 on the host to port 3000 in the container
+      - "3000:3000" # Map port 3000 on the host to port 3000 in the container
