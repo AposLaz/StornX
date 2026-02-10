@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Documentation
+    url: https://github.com/AposLaz/StornX/blob/main/README.md
+    about: Check the documentation before opening an issue.
+  - name: Helm Chart Reference
+    url: https://github.com/AposLaz/StornX/blob/main/.kubernetes/helm/README.md
+    about: Full Helm chart values and configuration reference.

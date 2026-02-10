@@ -1,38 +1,62 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
+name: Bug Report
+about: Report a bug to help us improve StornX
+title: "[BUG] "
+labels: bug
 assignees: ''
 
 ---
 
-**Describe the bug**
+## Describe the Bug
+
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+## To Reproduce
 
-**Expected behavior**
+Steps to reproduce the behavior:
+
+1. Deploy StornX with the following values: `...`
+2. Wait for the cron job to trigger (or describe the action)
+3. Observe the error in `...`
+
+## Expected Behavior
+
 A clear and concise description of what you expected to happen.
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+## Actual Behavior
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
+What actually happened instead.
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+## Logs / Error Output
 
-**Additional context**
-Add any other context about the problem here.
+<details>
+<summary>StornX pod logs</summary>
+
+```
+# Paste output of: kubectl logs -n stornx -l app.kubernetes.io/name=stornx --tail=100
+```
+
+</details>
+
+## Environment
+
+- **Kubernetes version** (`kubectl version --short`): 
+- **Kubernetes distribution** (e.g. EKS, GKE, AKS, k3s, kind, minikube): 
+- **StornX version / Helm chart version**: 
+- **Istio version** (if applicable): 
+- **Prometheus URL**: 
+- **Node count**: 
+- **Helm values overrides** (non-default values only):
+
+<details>
+<summary>Helm values</summary>
+
+```yaml
+# Paste relevant values here
+```
+
+</details>
+
+## Additional Context
+
+Add any other context about the problem here (screenshots, metric graphs, etc.).
