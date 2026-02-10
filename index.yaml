@@ -34,9 +34,9 @@ entries:
       category: Infrastructure
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-02-04T16:27:22.643384182Z"
+    created: "2026-02-10T21:31:35.003891099Z"
     description: StornX - Kubernetes Resource Optimization and Balancing Controller
-    digest: 5e5ddf9d2d51b6a2e301bad40f2a9064535529bcafc724fe5e29dbc7362c29ec
+    digest: 0f463b090705ae430237f40c920039374571ba3a8c95ea8be2a709d72b5e6684
     home: https://github.com/AposLaz/StornX
     keywords:
     - kubernetes
@@ -57,4 +57,4 @@ entries:
     urls:
     - https://aposlaz.github.io/StornX/stornx-1.0.0.tgz
     version: 1.0.0
-generated: "2026-02-04T16:27:22.642187781Z"
+generated: "2026-02-10T21:31:35.003030654Z"
