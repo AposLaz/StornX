@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-node@v3.6.0
         with:
           node-version: 18.x
-          cache: 'yarn'
+          cache: "yarn"
           cache-dependency-path: scheduler/yarn.lock
 
       - name: Install dependencies
@@ -36,6 +36,13 @@ jobs:
         working-directory: scheduler
         run: yarn lint
 
-      - name: Unit tests
-        working-directory: scheduler
-        run: yarn test
+      - name: Run tests with coverage
+        run: yarn test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: code-coverage
