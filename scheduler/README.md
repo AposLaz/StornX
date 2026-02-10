@@ -10,16 +10,16 @@ StornX is an application which is responsible to re-schedule replica Pods of a *
 
 All environment variables and their default values
 
-| Name                      | type     | Default Value  | Description                                                                                                                                                                                                        |
-| ------------------------- | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Name                      | type     | Default Value  | Description                                                                                                                                                                                                   |
+| ------------------------- | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `ENV`                     | `string` | `production`   | use different value from `production` only if you want to run StornX in development mode using the kubeconfig from you local machine                                                                          |
-| `APP_PORT`                | `string` | `3000`         | the port on which the app runs                                                                                                                                                                                     |
-| `NAMESPACES`              | `string` | `default`      | the app will watch and apply rescheduling strategies only on these namespaces. Use comma-separated namespaces, e.g., `my-namespace-1, my-namespace-2,...`                                                          |
-| `PROMETHEUS_SVC`          | `string` | `prometheus`   | the name of the Prometheus kubernetes service                                                                                                                                                                      |
-| `PROMETHEUS_NAMESPACE`    | `string` | `istio-system` | the name of namespace that the Prometheus service runs                                                                                                                                                             |
+| `APP_PORT`                | `string` | `3000`         | the port on which the app runs                                                                                                                                                                                |
+| `NAMESPACES`              | `string` | `default`      | the app will watch and apply rescheduling strategies only on these namespaces. Use comma-separated namespaces, e.g., `my-namespace-1, my-namespace-2,...`                                                     |
+| `PROMETHEUS_SVC`          | `string` | `prometheus`   | the name of the Prometheus kubernetes service                                                                                                                                                                 |
+| `PROMETHEUS_NAMESPACE`    | `string` | `istio-system` | the name of namespace that the Prometheus service runs                                                                                                                                                        |
 | `CRONJOB_TIME`            | `string` | `* * * * *`    | by default StornX runs every 1 minute and takes approximately 30 seconds to complete its process for 3 namespaces. You can modify this value and provide a cron job with an interval greater than one minute. |
-| `RESPONSE_TIME_THRESHOLD` | `number` | `100`          | define a response time threshold. Rescheduling replica Pods with value bigger than this number. This value is using only in `Istio` mode                                                                           |
-| `FT_MAX_ZONES` | `number` | `3` | define the maximum availability zones
+| `RESPONSE_TIME_THRESHOLD` | `number` | `100`          | define a response time threshold. Rescheduling replica Pods with value bigger than this number. This value is using only in `Istio` mode                                                                      |
+| `FT_MAX_ZONES`            | `number` | `3`            | define the maximum availability zones                                                                                                                                                                         |
 
 # Features
 

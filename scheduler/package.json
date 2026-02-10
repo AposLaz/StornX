@@ -15,8 +15,8 @@
     "stress:ob": "k6 run k6/online-boutique.ts",
     "stress:2app": "k6 run k6/2-app.ts",
     "test:coverage": "yarn test --coverage",
-    "prettier": "prettier --check --ignore-path .gitignore .",
-    "prettier:fix": "prettier --write --ignore-path .gitignore .",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write .",
     "eslint": "eslint .",
     "lint": "yarn tsc --noEmit && yarn eslint && yarn prettier",
     "lint:fix": "yarn eslint --fix && yarn prettier:fix"

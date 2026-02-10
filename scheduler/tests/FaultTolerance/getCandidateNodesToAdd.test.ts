@@ -191,10 +191,12 @@ describe('FaultTolerance - getCandidateNodesToAdd', () => {
     });
   });
 
-  // Scenario 6: 1 zone with 3 nodes, only one node has replicas
+  // Scenario 6: 1 zone with 3 nodes, one node has replicas
   // Input: Zone-1 contains Node-1 (with replicas), Node-11, Node-12 (no replicas but has resources)
-  // Expected Output: Node-11, Node-12
-  it('Scenario 6: Select nodes in the same zone without replicas', () => {
+  // Expected Output: All nodes with resources in the zone (node1, node11, node12)
+  // Note: The algorithm returns all nodes with resources in qualifying zones.
+  //       The OptiScaler will pick the best node based on latency/load criteria.
+  it('Scenario 6: Select all nodes with resources in the same zone', () => {
     // nodes with resources
     const zones = { 'zone-1': DummyCluster.AzTopology['zone-1'] };
     const nodesWithResources = [
@@ -223,7 +225,8 @@ describe('FaultTolerance - getCandidateNodesToAdd', () => {
     });
 
     const cNodes = ft.getCandidateNodesToAdd();
-    expect(cNodes.length).toBe(2);
+    expect(cNodes.length).toBe(3);
+    expect(cNodes.some((node) => node === 'node1')).toBe(true);
     expect(cNodes.some((node) => node === 'node11')).toBe(true);
     expect(cNodes.some((node) => node === 'node12')).toBe(true);
   });

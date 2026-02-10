@@ -7,13 +7,7 @@
  * under different scenarios. Use it to experiment with algorithm improvements.
  */
 
-import {
-  buildCluster,
-  buildNodesLatency,
-  buildUpstream,
-  printTrafficDistribution,
-  Scenarios,
-} from './data/testBuilders.js';
+import { printTrafficDistribution, Scenarios } from './data/testBuilders.js';
 import { TrafficEngine } from '../../src/core/optiBalancer/engine.js';
 import { MetricsType } from '../../src/enums.js';
 
@@ -86,11 +80,17 @@ const allScenarios = [
 ];
 
 for (const scenario of allScenarios) {
+  const data = scenario.data as {
+    pods: typeof scenario.data.pods;
+    upstream: typeof scenario.data.upstream;
+    nodesLatency: typeof scenario.data.nodesLatency;
+    nodeResponseTimes?: unknown[];
+  };
   const result = engine.calculateTraffic(
-    scenario.data.pods,
-    scenario.data.upstream,
-    scenario.data.nodesLatency,
-    scenario.data.nodeResponseTimes
+    data.pods,
+    data.upstream,
+    data.nodesLatency,
+    data.nodeResponseTimes as Parameters<typeof engine.calculateTraffic>[3]
   );
   printTrafficDistribution(result, scenario.name);
 }

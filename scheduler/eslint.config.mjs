@@ -11,6 +11,9 @@ const __dirname = path.dirname(__filename);
 
 export default [
   {
+    ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '.env*', 'eslint.config.js', 'jest.config.cjs'],
+  },
+  {
     files: ['**/*.{js,ts}'],
     languageOptions: {
       parser: tsParser,
@@ -54,6 +57,5 @@ export default [
         },
       ],
     },
-    ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**', '.env*', 'eslint.config.js', 'jest.config.cjs'],
   },
 ];

@@ -223,12 +223,6 @@ export const Scenarios = {
    * 2 nodes, equal load, equal replicas
    */
   twoNodesEqual(): {
-    nodeResponseTimes(
-      pods: PodMetrics[],
-      upstream: GraphDataRps[],
-      nodesLatency: NodesLatency[],
-      nodeResponseTimes: any
-    ): unknown;
     pods: PodMetrics[];
     upstream: GraphDataRps[];
     nodesLatency: NodesLatency[];

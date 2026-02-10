@@ -1,5 +1,5 @@
 import type { ClusterTopology, PodMetrics } from '../../adapters/k8s/types.js';
-import type { NodesLatency, DeploymentResponseTime } from '../../adapters/prometheus/types.js';
+import type { NodesLatency } from '../../adapters/prometheus/types.js';
 
 /**
  * Response time per node (P95 in milliseconds)

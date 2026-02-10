@@ -5,7 +5,6 @@ import {
   buildCluster,
   buildNodesLatency,
   buildUpstream,
-  buildLatencyWithSlowNode,
   getTrafficPercent,
   printTrafficDistribution,
   Scenarios,
@@ -416,7 +415,6 @@ describe('TrafficEngine', () => {
       // But local share enforcement still applies
 
       const fromAtoA = getTrafficPercent(result, 'node-a', 'node-a');
-      const fromAtoB = getTrafficPercent(result, 'node-a', 'node-b');
 
       // Local share enforcement means node-a still gets >= 35% of its own traffic
       expect(fromAtoA).toBeGreaterThanOrEqual(35);
