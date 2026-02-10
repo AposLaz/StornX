@@ -22,8 +22,8 @@
 *.tmproj
 .vscode/
 
-# Documentation (included in chart but not in package)
-README.md
+# Documentation
+# README.md is kept in the package so Artifact Hub can display it
 CHANGELOG.md
 
 # CI/CD files
