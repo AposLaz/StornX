@@ -12,16 +12,106 @@ All environment variables and their default values
 
 | Name                      | type     | Default Value  | Description                                                                                                                                                                                                   |
 | ------------------------- | -------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ENV`                     | `string` | `production`   | use different value from `production` only if you want to run StornX in development mode using the kubeconfig from you local machine                                                                          |
-| `APP_PORT`                | `string` | `3000`         | the port on which the app runs                                                                                                                                                                                |
-| `NAMESPACES`              | `string` | `default`      | the app will watch and apply rescheduling strategies only on these namespaces. Use comma-separated namespaces, e.g., `my-namespace-1, my-namespace-2,...`                                                     |
-| `PROMETHEUS_SVC`          | `string` | `prometheus`   | the name of the Prometheus kubernetes service                                                                                                                                                                 |
-| `PROMETHEUS_NAMESPACE`    | `string` | `istio-system` | the name of namespace that the Prometheus service runs                                                                                                                                                        |
-| `CRONJOB_TIME`            | `string` | `* * * * *`    | by default StornX runs every 1 minute and takes approximately 30 seconds to complete its process for 3 namespaces. You can modify this value and provide a cron job with an interval greater than one minute. |
-| `RESPONSE_TIME_THRESHOLD` | `number` | `100`          | define a response time threshold. Rescheduling replica Pods with value bigger than this number. This value is using only in `Istio` mode                                                                      |
-| `FT_MAX_ZONES`            | `number` | `3`            | define the maximum availability zones                                                                                                                                                                         |
+| `ENV`                     | `string` | `production`   | Run mode: `production` or `development` (affects setup and logging)                                                                                                                                            |
+| `APP_PORT`                | `string` | `3000`         | Port on which the app listens                                                                                                                                                                                  |
+| `NAMESPACES`              | `string` | `default`      | Comma-separated namespaces to monitor (e.g. `ns1,ns2`)                                                                                                                                                        |
+| `PROMETHEUS_URL`          | `string` | `http://prometheus.prometheus.svc.cluster.local:9090` | Full URL to Prometheus used for metrics collection                                                                                                   |
+| `CRONJOB_EXPRESSION`      | `string` | `* * * * *`    | Cron expression controlling the scheduler run frequency                                                                                                                                                       |
+| `LOCALITY_LABELS_CRON`    | `string` | `* * * * *`    | Cron expression for scraping locality/zone labels used by fault-tolerance calculations                                                                                                                        |
+| `METRICS_TYPE`            | `string` | `memory`       | Metrics source type: `cpu` or `memory` (affects weighting and selection in OptiScaler)                                                                                                                        |
+| `METRICS_UPPER_THRESHOLD` | `string` | `70`           | Upper threshold percentage (0-100) for triggering scale-up / rescheduling decisions                                                                                                                            |
+| `METRICS_LOWER_THRESHOLD` | `string` | `20`           | Lower threshold percentage (0-100) for scale-down / conservative behavior                                                                                                                                     |
+| `RESPONSE_TIME_THRESHOLD` | `number` | `100`          | Target response time (ms). Nodes/pods exceeding this are considered for rescheduling (used in Istio mode)                                                                                                     |
+| `CPU_WEIGHT`              | `number` | `50`           | Weight (0-100) for CPU when computing combined metric score                                                                                                                                                  |
+| `MEMORY_WEIGHT`           | `number` | `50`           | Weight (0-100) for Memory when computing combined metric score                                                                                                                                               |
+| `BALANCER_MIN_DELTA`      | `number` | `5`            | Minimum L1 delta to trigger a traffic balancing (DestinationRule) update                                                                                                                                     |
+| `BALANCER_MIN_STEP_SIZE`  | `number` | `5`            | Minimum step size for gradual traffic shifts                                                                                                                                                                 |
+| `BALANCER_MAX_STEP_SIZE`  | `number` | `20`           | Maximum step size for urgent traffic shifts                                                                                                                                                                  |
+| `BALANCER_URGENCY_THRESHOLD` | `number` | `50`        | Delta threshold at which max step is applied                                                                                                                                                                 |
+| `BALANCER_EPSILON`        | `number` | `1`            | Epsilon for convergence in balancer calculations                                                                                                                                                             |
+| `FT_MAX_ZONES`            | `number` | `3`            | Maximum number of zones to distribute replicas across for fault tolerance                                                                                                                                     |
 
 # Features
+
+## Balancer Configuration (OptiBalancer)
+
+The OptiBalancer gradually redistributes traffic across nodes by updating Istio **DestinationRules**. Instead of jumping to the ideal distribution in one shot, it applies **adaptive damping** — small corrections when the imbalance is minor, larger corrections when it is severe. Five parameters control this behaviour:
+
+### How the algorithm works (simplified)
+
+1. **`calculateTraffic()`** computes the ideal *target* distribution from latency, load, replica counts and P95 response times.
+2. **`stepTowardTarget()`** moves the *current* distribution toward the target using an adaptive step size that scales with urgency.
+3. If the resulting change is too small (below `BALANCER_MIN_DELTA`), the DestinationRule update is **skipped** to avoid Kubernetes API churn.
+
+The adaptive step formula:
+
+```
+urgency = min(1, delta / BALANCER_URGENCY_THRESHOLD)
+step    = BALANCER_MIN_STEP_SIZE + urgency × (BALANCER_MAX_STEP_SIZE − BALANCER_MIN_STEP_SIZE)
+```
+
+Each from→to route is then shifted by at most `step` percentage-points per cycle, unless the remaining difference is ≤ `BALANCER_EPSILON` (in which case the route is considered converged and left unchanged).
+
+---
+
+### `BALANCER_MIN_DELTA` — Dead-zone gate (default `5`)
+
+After computing the next stepped distribution, the **L1 distance** (sum of absolute percentage-point differences across all routes) between the *current live DestinationRule* and the *proposed* one is calculated. If the distance is **less than this value**, the update is **skipped entirely**.
+
+This prevents writing trivially different DestinationRules every cycle.
+
+| Value | Effect |
+|---|---|
+| Too low (0–1) | Every micro-change triggers a DR update → excessive Istio API writes and potential traffic oscillation. |
+| Too high (30+) | The balancer rarely applies updates → traffic stays stale even when conditions have meaningfully changed. |
+
+### `BALANCER_MIN_STEP_SIZE` — Minimum step (default `5`)
+
+The **floor** of the adaptive step size. When the imbalance (delta) is very small and urgency is near zero, each route can still shift by up to this many percentage-points per cycle.
+
+| Value | Effect |
+|---|---|
+| Too low (1) | Convergence is extremely slow — many cycles needed to correct even moderate imbalances. |
+| Too high (≥ `MAX_STEP_SIZE`) | Adaptive scaling is disabled — the system always makes large jumps, risking oscillation. |
+
+### `BALANCER_MAX_STEP_SIZE` — Maximum step (default `20`)
+
+The **ceiling** of the adaptive step size, used when urgency saturates to 1.0 (i.e. delta ≥ `URGENCY_THRESHOLD`). This is the largest percentage-point shift any single route can undergo in one cycle.
+
+| Value | Effect |
+|---|---|
+| Too low (same as `MIN_STEP_SIZE`) | The system cannot react quickly to sudden load shifts or node degradation. |
+| Too high (50+) | Aggressive one-shot rerouting under high urgency → possible over-correction and load spikes. |
+
+### `BALANCER_URGENCY_THRESHOLD` — Urgency ramp (default `50`)
+
+The L1 delta value at which urgency saturates to 1.0. Below this, the step is linearly interpolated between `MIN_STEP_SIZE` and `MAX_STEP_SIZE`.
+
+**Example** (with defaults `minStep=5`, `maxStep=20`, `urgencyThreshold=50`):
+
+| L1 Delta | Urgency | Effective Step |
+|---|---|---|
+| 10 | 0.20 | 8.0 |
+| 25 | 0.50 | 12.5 |
+| 50+ | 1.00 | 20.0 |
+
+| Value | Effect |
+|---|---|
+| Too low (5–10) | Almost any delta saturates urgency → the system always jumps at `MAX_STEP_SIZE`, losing gradual convergence. |
+| Too high (200+) | Urgency rarely reaches 1.0 → even severe imbalances are corrected sluggishly at near-`MIN_STEP_SIZE`. |
+
+### `BALANCER_EPSILON` — Per-route convergence tolerance (default `1`)
+
+When the absolute difference between the current and target percentage for a **single** route is ≤ epsilon, that route is left unchanged. This prevents rounding jitter at the tail end of convergence (e.g. toggling 33% ↔ 34% forever).
+
+| Value | Effect |
+|---|---|
+| Too low (0) | Sub-1% rounding artefacts trigger changes every cycle → perpetual micro-oscillation. |
+| Too high (10+) | Differences of several percentage-points are silently ignored → the distribution never fully converges. |
+
+---
+
+> **Tip:** If you are not sure how these affect your system, **keep the defaults**. Tuning is advanced and should be done gradually while monitoring application latency, error rates and Istio DestinationRule update frequency.
 
 - Currently, StornX supports only the rescheduling of **Deployments**.
 - Preserve fault-tolerance by ensuring that replica Pods are located in different Zones and Nodes, and avoiding placing all replica Pods in the same Zone or Node.

@@ -18,9 +18,23 @@ config:
   namespaces: "online-boutique"
   prometheusUrl: "http://prometheus.istio-system.svc.cluster.local:9090"
   cronjobExpression: "*/5 * * * *"  # Every 5 minutes in production
+  localityLabelsCron: "*/5 * * * *"
   metricsType: "memory"
   metricsUpperThreshold: "80"
   metricsLowerThreshold: "30"
+  responseTimeThreshold: "100"
+  cpuWeight: "50"
+  memoryWeight: "50"
+  # -- OptiBalancer tuning parameters
+  # These tune traffic shifting behavior. Leave the defaults if you are unsure.
+  balancer:
+    minDelta: "5"
+    minStepSize: "5"
+    maxStepSize: "20"
+    urgencyThreshold: "50"
+    epsilon: "1"
+  faultTolerance:
+    ftMaxZones: "3"
 
 resources:
   limits:

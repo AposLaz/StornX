@@ -17,9 +17,23 @@ config:
   namespaces: "default"
   prometheusUrl: "http://prometheus.istio-system.svc.cluster.local:9090"
   cronjobExpression: "* * * * *"  # Every minute for faster feedback
+  localityLabelsCron: "* * * * *"
   metricsType: "memory"
   metricsUpperThreshold: "60"
   metricsLowerThreshold: "10"
+  responseTimeThreshold: "100"
+  cpuWeight: "50"
+  memoryWeight: "50"
+  # -- OptiBalancer tuning parameters
+  # These tune traffic shifting behavior. Leave the defaults if you are unsure.
+  balancer:
+    minDelta: "5"
+    minStepSize: "5"
+    maxStepSize: "20"
+    urgencyThreshold: "50"
+    epsilon: "1"
+  faultTolerance:
+    ftMaxZones: "3"
 
 resources:
   limits:

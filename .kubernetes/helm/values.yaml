@@ -41,6 +41,8 @@ config:
   
   # -- Cron expression for scheduling optimization jobs
   cronjobExpression: "* * * * *"
+  # -- Cron for scraping locality labels (used by fault tolerance)
+  localityLabelsCron: "* * * * *"
   
   # -- Type of metrics to use for scaling decisions (cpu, memory)
   metricsType: "memory"
@@ -50,6 +52,25 @@ config:
   
   # -- Lower threshold percentage for scaling down
   metricsLowerThreshold: "20"
+  responseTimeThreshold: "100"
+  cpuWeight: "50"
+  memoryWeight: "50"
+
+  # -- OptiBalancer tuning parameters
+  # -- OptiBalancer tuning parameters
+  # These tune traffic shifting behavior. Leave the defaults if you are unsure.
+  # Changing these values affects how aggressively traffic is moved between
+  # destinations; only modify when you understand the tradeoffs.
+  balancer:
+    minDelta: "5"
+    minStepSize: "5"
+    maxStepSize: "20"
+    urgencyThreshold: "50"
+    epsilon: "1"
+
+  # -- Fault tolerance settings
+  faultTolerance:
+    ftMaxZones: "3"
 
 # -- Additional environment variables
 extraEnv: []

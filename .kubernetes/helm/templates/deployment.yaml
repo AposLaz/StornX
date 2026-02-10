@@ -61,6 +61,26 @@ spec:
               value: {{ .Values.config.metricsUpperThreshold | quote }}
             - name: METRICS_LOWER_THRESHOLD
               value: {{ .Values.config.metricsLowerThreshold | quote }}
+            - name: RESPONSE_TIME_THRESHOLD
+              value: {{ .Values.config.responseTimeThreshold | quote }}
+            - name: CPU_WEIGHT
+              value: {{ .Values.config.cpuWeight | quote }}
+            - name: MEMORY_WEIGHT
+              value: {{ .Values.config.memoryWeight | quote }}
+            - name: LOCALITY_LABELS_CRON
+              value: {{ .Values.config.localityLabelsCron | quote }}
+            - name: BALANCER_MIN_DELTA
+              value: {{ .Values.config.balancer.minDelta | quote }}
+            - name: BALANCER_MIN_STEP_SIZE
+              value: {{ .Values.config.balancer.minStepSize | quote }}
+            - name: BALANCER_MAX_STEP_SIZE
+              value: {{ .Values.config.balancer.maxStepSize | quote }}
+            - name: BALANCER_URGENCY_THRESHOLD
+              value: {{ .Values.config.balancer.urgencyThreshold | quote }}
+            - name: BALANCER_EPSILON
+              value: {{ .Values.config.balancer.epsilon | quote }}
+            - name: FT_MAX_ZONES
+              value: {{ .Values.config.faultTolerance.ftMaxZones | quote }}
             {{- with .Values.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
