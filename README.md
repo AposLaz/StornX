@@ -70,27 +70,27 @@ In distributed microservice architectures, Kubernetes schedules pods once — at
 ## Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                            StornX                                    │
-│                                                                      │
-│  ┌──────────────┐    ┌───────────────┐    ┌───────────────────────┐  │
+┌───────────────────────────────────────────────────────────────────────┐
+│                            StornX                                     │
+│                                                                       │
+│  ┌──────────────┐    ┌───────────────┐     ┌───────────────────────┐  │
 │  │  Cron Engine │───▶│  OptiBalancer  │───▶│  Istio DestinationRule│  │
 │  │  (node-cron) │    │  Traffic       │    │  Updates              │  │
 │  │              │    │  Optimization  │    └───────────────────────┘  │
 │  │              │    └───────────────┘                                │
-│  │              │    ┌───────────────┐    ┌───────────────────────┐  │
+│  │              │    ┌───────────────┐     ┌───────────────────────┐  │
 │  │              │───▶│  OptiScaler    │───▶│  Pod Create / Delete  │  │
 │  │              │    │  Autoscaling   │    │  (kubectl)            │  │
-│  └──────────────┘    └───────────────┘    └───────────────────────┘  │
+│  └──────────────┘    └───────────────┘     └───────────────────────┘  │
 │         │                    │                                        │
 │         ▼                    ▼                                        │
-│  ┌──────────────────────────────────────┐                            │
-│  │         Prometheus Adapter           │                            │
-│  │  • P95 response times (Istio)        │                            │
-│  │  • CPU / Memory utilization          │                            │
-│  │  • Request rates & service graph     │                            │
-│  └──────────────────────────────────────┘                            │
-└──────────────────────────────────────────────────────────────────────┘
+│  ┌──────────────────────────────────────┐                             │
+│  │         Prometheus Adapter           │                             │
+│  │  • P95 response times (Istio)        │                             │
+│  │  • CPU / Memory utilization          │                             │
+│  │  • Request rates & service graph     │                             │
+│  └──────────────────────────────────────┘                             │
+└───────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -169,7 +169,7 @@ StornX is configured entirely via environment variables, all exposed through the
 
 ### OptiBalancer Tuning
 
-These control the adaptive traffic-shifting algorithm. **Leave defaults if you are unsure** — see [`scheduler/README.md`](scheduler/README.md#balancer-configuration-optibalancer) for a deep dive.
+These control the adaptive traffic-shifting algorithm. **Leave defaults if you are unsure** — see [`docs/README.md`](docs/README.md#balancer-configuration-optibalancer) for a deep dive.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -293,5 +293,5 @@ This project is licensed under the **Apache License 2.0** — see the [LICENSE](
 ---
 
 <p align="center">
-  Built with ❤️ by <a href="https://github.com/AposLaz">Apostolos Lazidis</a>
+  Built by <a href="https://github.com/AposLaz">Apostolos Lazidis</a>
 </p>
