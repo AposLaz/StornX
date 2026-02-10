@@ -61,7 +61,7 @@ export class OptiScaler {
       this.loggerOperation.info(
         `In the next cycle apply traffic distribution rules on deployment ${this.optiData.deployment}`
       );
-      this.fileSystem.appendData(writeData);
+      await this.fileSystem.appendData(writeData);
     }
 
     if (this.scaleAction === ScaleAction.DOWN) {
@@ -78,7 +78,7 @@ export class OptiScaler {
         namespace: this.optiData.namespace,
       };
 
-      this.fileSystem.appendData(writeData);
+      await this.fileSystem.appendData(writeData);
     }
   }
 

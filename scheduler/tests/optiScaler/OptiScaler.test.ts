@@ -101,21 +101,18 @@ describe('filesystem setup scale up', () => {
   it('check write data 2 times', async () => {
     const filePath = `${SetupFolderFiles.DEFAULT_PATH}/${SetupFolderFiles.DEPLOYS_PATH}/${SetupFolderFiles.DEPLOYS_FILE}`;
 
-    await optiScaler.Execute(MetricsType.CPU, weights);
+    // Clear file before test to ensure isolation from parallel tests
+    await fsSync.writeFile(filePath, JSON.stringify([]));
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    await optiScaler.Execute(MetricsType.CPU, weights);
 
     // Read the file contents
     const fileContent = fs.readFileSync(filePath, 'utf-8');
-
-    // Parse JSON
     const jsonData = JSON.parse(fileContent);
 
     // Assert array of 1 element
     expect(Array.isArray(jsonData)).toBe(true);
     expect(jsonData.length).toBe(1);
-
-    // Assert fields
     expect(jsonData[0]).toEqual({
       deployment: 'frontend',
       namespace: 'online-boutique',
@@ -123,19 +120,13 @@ describe('filesystem setup scale up', () => {
 
     await optiScaler.Execute(MetricsType.CPU, weights);
 
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
     // Read the file contents
     const fileContent2 = fs.readFileSync(filePath, 'utf-8');
-
-    // Parse JSON
     const jsonData2 = JSON.parse(fileContent2);
 
-    // Assert array of 1 element
+    // Assert array of 2 elements
     expect(Array.isArray(jsonData2)).toBe(true);
     expect(jsonData2.length).toBe(2);
-
-    // Assert fields
     expect(jsonData2[1]).toEqual({
       deployment: 'frontend',
       namespace: 'online-boutique',
