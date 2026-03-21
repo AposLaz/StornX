@@ -67,8 +67,6 @@ helm install stornx stornx/stornx -n stornx \
 helm install stornx stornx/stornx -n stornx -f values-production.yaml
 ```
 
-> The chart is also available on [Artifact Hub](https://artifacthub.io/packages/helm/stornx/stornx).
-
 ## Upgrading
 
 ```bash
@@ -113,7 +111,7 @@ kubectl delete namespace stornx
 | `config.prometheusUrl` | Prometheus URL | `http://prometheus.istio-system.svc.cluster.local:9090` |
 | `config.cronjobExpression` | Cron schedule for optimization | `* * * * *` |
 | `config.metricsType` | Metrics type (cpu/memory) | `memory` |
-| `config.metricsUpperThreshold` | Upper threshold % for scaling | `70` |
+| `config.metricsUpperThreshold` | Upper threshold % for scaling | `80` |
 | `config.metricsLowerThreshold` | Lower threshold % for scaling | `20` |
 | `extraEnv` | Additional environment variables | `[]` |
 

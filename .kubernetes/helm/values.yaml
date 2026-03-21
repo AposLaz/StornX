@@ -48,7 +48,7 @@ config:
   metricsType: "memory"
   
   # -- Upper threshold percentage for scaling up
-  metricsUpperThreshold: "70"
+  metricsUpperThreshold: "80"
   
   # -- Lower threshold percentage for scaling down
   metricsLowerThreshold: "20"
