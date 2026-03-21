@@ -154,7 +154,7 @@ StornX is configured entirely via environment variables, all exposed through the
 | `ENV` | `production` | Run mode (`production` / `development`) |
 | `APP_PORT` | `3000` | HTTP server port |
 | `NAMESPACES` | `default` | Comma-separated namespaces to monitor |
-| `PROMETHEUS_URL` | `http://prometheus.prometheus.svc.cluster.local:9090` | Prometheus endpoint |
+| `PROMETHEUS_URL` | `http://storn-prometheus-server.stornx.svc.cluster.local` | Prometheus endpoint |
 | `CRONJOB_EXPRESSION` | `* * * * *` | Cron schedule for the optimization loop |
 | `LOCALITY_LABELS_CRON` | `* * * * *` | Cron for zone-label discovery |
 
@@ -163,7 +163,7 @@ StornX is configured entirely via environment variables, all exposed through the
 | Variable | Default | Description |
 |---|---|---|
 | `METRICS_TYPE` | `memory` | Primary metric: `cpu` or `memory` |
-| `METRICS_UPPER_THRESHOLD` | `70` | Upper % to trigger scale-up / rescheduling |
+| `METRICS_UPPER_THRESHOLD` | `80` | Upper % to trigger scale-up / rescheduling |
 | `METRICS_LOWER_THRESHOLD` | `20` | Lower % to trigger scale-down |
 | `RESPONSE_TIME_THRESHOLD` | `100` | Target P95 response time in ms |
 | `CPU_WEIGHT` | `50` | Weight (0–100) for CPU in combined score |
