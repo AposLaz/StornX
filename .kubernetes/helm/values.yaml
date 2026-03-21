@@ -9,7 +9,7 @@ image:
   repository: alazidis/stornx
   pullPolicy: Always
   # -- Overrides the image tag whose default is the chart appVersion
-  tag: "latest"
+  tag: "1.1.0"
 
 # -- Image pull secrets for private registries
 imagePullSecrets:
@@ -37,7 +37,7 @@ config:
   namespaces: "online-boutique"
   
   # -- Prometheus URL for metrics collection
-  prometheusUrl: "http://prometheus.istio-system.svc.cluster.local:9090"
+  prometheusUrl: "http://stornx-prometheus-server"
   
   # -- Cron expression for scheduling optimization jobs
   cronjobExpression: "* * * * *"

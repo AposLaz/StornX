@@ -6,7 +6,7 @@ replicaCount: 1
 image:
   repository: alazidis/stornx
   pullPolicy: Always
-  tag: "latest"
+  tag: "1.1.0"
 
 imagePullSecrets:
   - name: regcred
@@ -15,7 +15,7 @@ config:
   env: development
   appPort: 3000
   namespaces: "default"
-  prometheusUrl: "http://prometheus.stornx.svc.cluster.local:9090"
+  prometheusUrl: "http://stornx-prometheus-server"
   cronjobExpression: "* * * * *"  # Every minute for faster feedback
   localityLabelsCron: "* * * * *"
   metricsType: "memory"

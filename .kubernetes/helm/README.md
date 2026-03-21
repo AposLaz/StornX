@@ -108,7 +108,7 @@ kubectl delete namespace stornx
 | `config.env` | Environment mode | `production` |
 | `config.appPort` | Application port | `3000` |
 | `config.namespaces` | Namespaces to monitor (comma-separated) | `online-boutique` |
-| `config.prometheusUrl` | Prometheus URL | `http://prometheus.istio-system.svc.cluster.local:9090` |
+| `config.prometheusUrl` | Prometheus URL | `http://stornx-prometheus-server` |
 | `config.cronjobExpression` | Cron schedule for optimization | `* * * * *` |
 | `config.metricsType` | Metrics type (cpu/memory) | `memory` |
 | `config.metricsUpperThreshold` | Upper threshold % for scaling | `80` |
