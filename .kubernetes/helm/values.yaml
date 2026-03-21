@@ -201,3 +201,117 @@ volumeMounts: []
 #    readOnly: true
 
 
+# =============================================================================
+# Dependencies Configuration
+# =============================================================================
+
+kube-netlag:
+  enabled: true
+  imagePullSecrets:
+    - name: "regcred"
+  nameOverride: "kube-netlag"
+      
+prometheus:
+  enabled: true
+  imagePullSecrets:
+    - name: "regcred"
+  server:
+    name: server
+    global:
+      scrape_interval: 15s
+      scrape_timeout: 10s
+      evaluation_interval: 15s
+    extraConfigmapMounts:
+      - name: kube-netlag
+        mountPath: /etc/config/kube-netlag
+        configMap: kube-netlag
+        readOnly: true
+    
+    # fullnameOverride: "prometheus"
+    
+    persistentVolume:
+      enabled: true
+      mountPath: /data
+      size: 8Gi
+    replicaCount: 1
+    retention: "15d"
+
+  extraScrapeConfigs: |-
+    - job_name: 'istiod'
+      kubernetes_sd_configs:
+      - role: endpoints
+        namespaces:
+          names:
+          - istio-system
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: istiod;http-monitoring
+    - job_name: 'envoy-stats'
+      metrics_path: /stats/prometheus
+      kubernetes_sd_configs:
+      - role: pod
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_container_port_name]
+        action: keep
+        regex: '.*-envoy-prom'
+  scrapeConfigFiles:
+    - /etc/config/kube-netlag/kube-netlag.yaml
+  alertmanager:
+    enabled: false
+  prometheus-pushgateway:
+    enabled: false
+
+istiod:
+  enabled: true
+  _internal_defaults_do_not_set:
+    autoscaleEnabled: true
+    global:
+      istioNamespace: stornx
+      # A minimal set of requested resources to applied to all deployments so that
+      # Horizontal Pod Autoscaler will be able to function (if set).
+      # Each component can overwrite these default values by adding its own resources
+      # block in the relevant section below and setting the desired resources values.
+      defaultResources:
+        requests:
+          cpu: 10m
+          memory: 128Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+
+      imagePullSecrets:
+       - regcred
+
+      proxy:
+        # Resources for the sidecar.
+        resources:
+          requests:
+            cpu: 40m
+            memory: 64Mi
+          limits:
+            cpu: 80m
+            memory: 128Mi
+
+
+metrics-server:
+  enabled: true
+  imagePullSecrets:
+    - name: "regcred"
+
+kiali:
+  enabled: true
+  auth:
+    strategy: anonymous
+  deployment:
+    cluster_wide_access: true
+    image_pull_secrets:
+      - regcred
+  external_services:
+    prometheus:
+      url: http://stornx-deps-prometheus-server.stornx.svc.cluster.local:80
+    istio:
+      root_namespace: stornx
+      component_namespaces:
+        istiod: stornx
+        prometheus: stornx

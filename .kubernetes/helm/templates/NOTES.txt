@@ -1,4 +1,8 @@
+================================
 StornX has been deployed successfully!
+================================
+Release : {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
 
 1. StornX Configuration:
    - Environment: {{ .Values.config.env }}
@@ -19,3 +23,63 @@ StornX has been deployed successfully!
    kubectl exec -n {{ include "stornx.namespace" . }} -it $(kubectl get pods -n {{ include "stornx.namespace" . }} -l app.kubernetes.io/name={{ include "stornx.name" . }} -o jsonpath="{.items[0].metadata.name}") -- curl -s localhost:{{ .Values.config.appPort }}/health
 
 NOTE: StornX runs as a single replica to prevent duplicate scheduling decisions.
+
+
+================================
+StornX - Component Dependencies
+================================
+
+Components deployed:
+
+{{- if .Values.istiod.enabled }}
+[✓] istiod
+    Istio control plane - manages sidecar injection, traffic routing, and mTLS.
+    Namespace: {{ .Release.Namespace }}
+
+    Verify istiod is running:
+      kubectl get pods -n {{ .Release.Namespace }} -l app=istiod
+{{- end }}
+
+{{- if index .Values "kube-netlag" "enabled" }}
+[✓] kube-netlag
+    DaemonSet that measures inter-node network latency using Netperf.
+    Exposes Prometheus metrics at :9090/metrics on every node.
+    Custom metrics: node_min_latency_ms, node_max_latency_ms, node_avg_latency_ms
+{{- end }}
+
+{{- if .Values.prometheus.enabled }}
+[✓] Prometheus
+    Scrapes metrics from:
+      - istiod        (control plane stats via http-monitoring port)
+      - envoy-stats   (Envoy sidecar/gateway proxy metrics)
+      - kube-netlag   (inter-node latency metrics via extraScrapeConfigs)
+      - cAdvisor      (container CPU/memory via default kubernetes-pods job)
+
+    Access Prometheus UI:
+      kubectl port-forward svc/prometheus 9090:9090 -n {{ .Release.Namespace }}
+      Open: http://localhost:9090
+{{- end }}
+
+{{- if index .Values "metrics-server" "enabled" }}
+[✓] Metrics Server
+    Provides resource usage metrics (CPU/memory) for pods and nodes.
+    Required by Horizontal Pod Autoscaler (HPA) and kubectl top.
+
+    Verify metrics-server is running:
+      kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/name=metrics-server
+    Test:
+      kubectl top nodes
+      kubectl top pods -A
+{{- end }}
+
+{{- if index .Values "kiali" "enabled" }}
+[✓] Kiali
+    Service mesh observability UI - visualizes traffic, topology, and health.
+    Auth strategy: {{ index .Values "kiali" "auth" "strategy" }}
+    Prometheus: {{ index .Values "kiali" "external_services" "prometheus" "url" }}
+
+    Access Kiali UI:
+      kubectl port-forward svc/kiali 20001:20001 -n {{ .Release.Namespace }}
+      Open: http://localhost:20001
+{{- end }}
+

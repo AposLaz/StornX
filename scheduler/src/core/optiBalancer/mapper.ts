@@ -1,6 +1,19 @@
 import type { DestinationRule, DistributedPercentTraffic } from './types.js';
 import type { ClusterTopology } from '../../adapters/k8s/types.js';
 
+function normalizeTo100(m: Record<string, number>): Record<string, number> {
+  const entries = Object.entries(m);
+  if (entries.length === 0) return {};
+  const sum = entries.reduce((a, [, v]) => a + v, 0) || 1;
+  const floats = entries.map(([k, v]) => [k, (v / sum) * 100] as const);
+  const floors = floats.map(([k, f]) => [k, Math.floor(f)] as const);
+  let used = floors.reduce((a, [, v]) => a + v, 0);
+  const rema = floats.map(([k, f], i) => ({ k, r: f - floors[i][1] })).sort((a, b) => b.r - a.r);
+  const out = Object.fromEntries(floors) as Record<string, number>;
+  for (let i = 0; used < 100 && i < rema.length; i++, used++) out[rema[i].k] += 1;
+  return out;
+}
+
 export const OptiBalancerMapper = {
   toDestinationRule: (
     trafficRules: DistributedPercentTraffic[],
@@ -37,9 +50,7 @@ export const OptiBalancerMapper = {
 
     const distributeRules = Object.entries(groupedTraffic).map(([from, toMap]) => ({
       from,
-      to: Object.fromEntries(
-        Object.entries(toMap).map(([to, percentage]) => [to, percentage]) // Convert back to object
-      ),
+      to: normalizeTo100(toMap),
     }));
 
     return {

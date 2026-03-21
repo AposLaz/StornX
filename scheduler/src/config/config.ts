@@ -1,6 +1,7 @@
 import * as dotenv from 'dotenv';
 
 import { MetricsType } from '../enums.js';
+import { logger } from './logger.js';
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ const requiredEnvVariables: Array<string> = [
 
 requiredEnvVariables.forEach((envVarName: string) => {
   if (!process.env[envVarName]) {
-    console.log(`Environment variable ${envVarName} is missing`);
+    logger.error(`Environment variable ${envVarName} is missing`);
   }
 });
 

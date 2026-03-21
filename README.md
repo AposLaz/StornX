@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  StornX monitors your Kubernetes workloads and <strong>automatically reschedules pods to reduce inter-service latency</strong>, balance traffic across nodes, and maintain fault tolerance — all without downtime.
+  StornX monitors your Kubernetes workloads and <strong>automatically reschedules pods to reduce inter-service latency</strong>, balance traffic across nodes, and maintain fault tolerance - all without downtime.
 </p>
 
 ---
@@ -40,7 +40,7 @@
 
 ## Why StornX?
 
-In distributed microservice architectures, Kubernetes schedules pods once — at creation time. As traffic patterns change, pods that communicate frequently may end up on distant nodes, increasing latency and wasting bandwidth.
+In distributed microservice architectures, Kubernetes schedules pods once - at creation time. As traffic patterns change, pods that communicate frequently may end up on distant nodes, increasing latency and wasting bandwidth.
 
 **StornX fixes this by continuously optimizing pod placement and traffic routing based on real-time metrics.**
 
@@ -55,15 +55,15 @@ In distributed microservice architectures, Kubernetes schedules pods once — at
 
 ## Key Features
 
-- **OptiBalancer** — Gradually rebalances Istio DestinationRule traffic weights based on latency, load, and replica count. Uses adaptive step sizing with configurable urgency scaling to avoid oscillation.
+- **OptiBalancer** - Gradually rebalances Istio DestinationRule traffic weights based on latency, load, and replica count. Uses adaptive step sizing with configurable urgency scaling to avoid oscillation.
 
-- **OptiScaler** — Intelligent pod autoscaling that selects the optimal node for new replicas using service-graph analysis (upstream/downstream relationships) and falls back to resource-based (LFU) selection when no graph data is available.
+- **OptiScaler** - Intelligent pod autoscaling that selects the optimal node for new replicas using service-graph analysis (upstream/downstream relationships) and falls back to resource-based (LFU) selection when no graph data is available.
 
-- **Fault Tolerance** — Ensures replicas are distributed across availability zones. Respects PodDisruptionBudgets and coordinates with existing HPAs.
+- **Fault Tolerance** - Ensures replicas are distributed across availability zones. Respects PodDisruptionBudgets and coordinates with existing HPAs.
 
-- **Zero-Downtime Rescheduling** — New pods reach `Running` state before old pods are removed, guaranteeing uninterrupted service.
+- **Zero-Downtime Rescheduling** - New pods reach `Running` state before old pods are removed, guaranteeing uninterrupted service.
 
-- **Single-Instance Design** — Runs as exactly one replica to prevent duplicate scheduling decisions.
+- **Single-Instance Design** - Runs as exactly one replica to prevent duplicate scheduling decisions.
 
 ---
 
@@ -74,13 +74,13 @@ In distributed microservice architectures, Kubernetes schedules pods once — at
 │                            StornX                                     │
 │                                                                       │
 │  ┌──────────────┐    ┌───────────────┐     ┌───────────────────────┐  │
-│  │  Cron Engine │───▶│  OptiBalancer  │───▶│  Istio DestinationRule│  │
-│  │  (node-cron) │    │  Traffic       │    │  Updates              │  │
-│  │              │    │  Optimization  │    └───────────────────────┘  │
+│  │  Cron Engine │───▶│  OptiBalancer │───▶ │  Istio DestinationRule│  │
+│  │  (node-cron) │    │  Traffic      │     │  Updates              │  │
+│  │              │    │  Optimization │     └───────────────────────┘  │
 │  │              │    └───────────────┘                                │
 │  │              │    ┌───────────────┐     ┌───────────────────────┐  │
-│  │              │───▶│  OptiScaler    │───▶│  Pod Create / Delete  │  │
-│  │              │    │  Autoscaling   │    │  (kubectl)            │  │
+│  │              │───▶│  OptiScaler   │───▶ │  Pod Create / Delete  │  │
+│  │              │    │  Autoscaling  │     │  (kubectl)            │  │
 │  └──────────────┘    └───────────────┘     └───────────────────────┘  │
 │         │                    │                                        │
 │         ▼                    ▼                                        │
@@ -109,21 +109,23 @@ In distributed microservice architectures, Kubernetes schedules pods once — at
 ### Install with Helm
 
 ```bash
-# Add the namespace
+# Add the StornX Helm repository
+helm repo add stornx https://aposlaz.github.io/StornX
+helm repo update
+
+# Create the namespace
 kubectl create namespace stornx
 
 # Install with default values
-helm install stornx ./.kubernetes/helm -n stornx
+helm install stornx stornx/stornx -n stornx
 
-# Or with production values
-helm install stornx ./.kubernetes/helm -n stornx \
-  -f ./.kubernetes/helm/values-production.yaml
-
-# Customize inline
-helm install stornx ./.kubernetes/helm -n stornx \
-  --set config.namespaces="my-app,my-api" \
+# Or customize inline
+helm install stornx stornx/stornx -n stornx \
+  --set config.namespaces="my-app-1,my-app-2" \
   --set config.prometheusUrl="http://prometheus.monitoring.svc:9090"
 ```
+
+> **Note:** The chart is also available on [Artifact Hub](https://artifacthub.io/packages/helm/stornx/stornx).
 
 ### Verify
 
@@ -169,7 +171,7 @@ StornX is configured entirely via environment variables, all exposed through the
 
 ### OptiBalancer Tuning
 
-These control the adaptive traffic-shifting algorithm. **Leave defaults if you are unsure** — see [`docs/README.md`](docs/README.md#balancer-configuration-optibalancer) for a deep dive.
+These control the adaptive traffic-shifting algorithm. **Leave defaults if you are unsure** - see [`docs/README.md`](docs/README.md#balancer-configuration-optibalancer) for a deep dive.
 
 | Variable | Default | Description |
 |---|---|---|
@@ -263,12 +265,12 @@ StornX/
 
 ## Roadmap
 
-- [ ] **Reduce inter-service response time** — Continuously optimize pod placement so that frequently communicating services are co-located, minimizing network hops and P95 latency
-- [ ] **Per-deployment autoscaling** — Scale each Deployment independently based on its own metrics, thresholds, and traffic patterns instead of a single global policy
-- [ ] **Per-deployment traffic routing** — Apply fine-grained Istio DestinationRule weight adjustments per Deployment, allowing each service to have its own balancing strategy
-- [ ] **StatefulSet support** — Extend rescheduling and autoscaling to StatefulSets (currently only Deployments are supported)
-- [ ] **Predictive decisions from historical traffic** — Use historical metrics to forecast traffic patterns and proactively scale / rebalance before demand spikes occur
-- [ ] **Dashboard** — Built-in web UI for visualizing decisions, traffic distributions, and historical trends
+- [ ] **Reduce inter-service response time** - Continuously optimize pod placement so that frequently communicating services are co-located, minimizing network hops and P95 latency
+- [ ] **Per-deployment autoscaling** - Scale each Deployment independently based on its own metrics, thresholds, and traffic patterns instead of a single global policy
+- [ ] **Per-deployment traffic routing** - Apply fine-grained Istio DestinationRule weight adjustments per Deployment, allowing each service to have its own balancing strategy
+- [ ] **StatefulSet support** - Extend rescheduling and autoscaling to StatefulSets (currently only Deployments are supported)
+- [ ] **Predictive decisions from historical traffic** - Use historical metrics to forecast traffic patterns and proactively scale / rebalance before demand spikes occur
+- [ ] **Dashboard** - Built-in web UI for visualizing decisions, traffic distributions, and historical trends
 
 ---
 
@@ -288,7 +290,7 @@ Please ensure all tests pass (`yarn test`) and linting is clean (`yarn lint`) be
 
 ## License
 
-This project is licensed under the **Apache License 2.0** — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Apache License 2.0** - see the [LICENSE](LICENSE) file for details.
 
 ---
 

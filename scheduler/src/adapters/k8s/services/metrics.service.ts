@@ -27,7 +27,6 @@ export class MetricsService {
     const topPods = await k8s.topPods(this.coreClient, this.metricClient, namespace);
 
     const pods = k8sMapper.toPodResources(topPods, this.weights);
-    console.log(pods);
     return pods;
   }
 }

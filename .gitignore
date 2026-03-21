@@ -5,3 +5,11 @@ istio-1.22.0/
 hello-world/
 destinationRules/*.yaml
 locust/
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.backup
+.terraform.tfstate
+.terraform.tfstate.backup
+perf-tests
+.infra

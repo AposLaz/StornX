@@ -15,7 +15,7 @@ config:
   env: development
   appPort: 3000
   namespaces: "default"
-  prometheusUrl: "http://prometheus.istio-system.svc.cluster.local:9090"
+  prometheusUrl: "http://prometheus.stornx.svc.cluster.local:9090"
   cronjobExpression: "* * * * *"  # Every minute for faster feedback
   localityLabelsCron: "* * * * *"
   metricsType: "memory"
@@ -60,3 +60,26 @@ startupProbe:
 
 persistence:
   enabled: false
+
+kube-netlag:
+  enabled: true
+  imagePullSecrets:
+    - name: "regcred"
+      
+prometheus:
+  enabled: true
+  imagePullSecrets:
+    - name: "regcred"
+
+istiod:
+  enabled: true
+  _internal_defaults_do_not_set:
+    global:
+      imagePullSecrets:
+       - regcred
+
+kiali:
+  enabled: true
+  deployment:
+    image_pull_secrets:
+      - regcred

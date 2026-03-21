@@ -4,10 +4,42 @@ A Helm chart for deploying StornX - Kubernetes Resource Optimization and Balanci
 
 ## Prerequisites
 
-- Kubernetes 1.19+
-- Helm 3.2.0+
-- Prometheus installed in the cluster (for metrics collection)
-- Istio (optional, for advanced traffic management with DestinationRules)
+- Kubernetes ≥ 1.19
+- Helm ≥ 3.2.0
+- **Istio base CRDs** - Must be installed prior to deploying StornX. Follow the [official Istio base chart documentation](https://artifacthub.io/packages/helm/istio-official/base) for installation instructions.
+- **Istiod** - Required for traffic management (sidecar injection, mTLS, DestinationRules).
+- **Prometheus** - Required for metrics collection.
+- **kube-netlag** - Required for inter-node network latency measurements.
+- **Metrics Server** - Required for node and pod resource usage metrics (`kubectl top`). Follow the [official installation guide](https://github.com/kubernetes-sigs/metrics-server#installation).
+- Kiali (optional) - Service mesh observability dashboard.
+
+## Bundled Dependencies
+
+The StornX chart includes the following components as optional sub-chart dependencies. Each can be independently enabled or disabled depending on your cluster's existing infrastructure.
+
+| Component | Condition | Required | Description |
+|-----------|-----------|----------|-------------|
+| [istiod](https://artifacthub.io/packages/helm/istio-official/istiod) | `istiod.enabled` | Yes | Istio control plane - sidecar injection, traffic routing, mTLS |
+| [prometheus](https://artifacthub.io/packages/helm/prometheus-community/prometheus) | `prometheus.enabled` | Yes | Metrics server - scrapes Envoy, istiod, cAdvisor, kube-netlag |
+| [kube-netlag](https://artifacthub.io/packages/helm/kube-netlag/kube-netlag) | `kube-netlag.enabled` | Yes | DaemonSet for measuring inter-node network latency |
+| [kiali](https://artifacthub.io/packages/helm/kiali/kiali-server) | `kiali.enabled` | No | Service mesh observability dashboard |
+
+> **Selective installation:** If your cluster already has Prometheus or Istiod deployed, disable the corresponding sub-chart to avoid conflicts:
+>
+> ```bash
+> helm install stornx stornx/stornx -n stornx \
+>   --set istiod.enabled=false \
+>   --set prometheus.enabled=false
+> ```
+>
+> **Custom configuration:** Each sub-chart accepts its full set of upstream values. You can override any parameter by prefixing it with the dependency name. For the complete list of available options, refer to the official documentation of each component linked above.
+>
+> For example, to customize the Prometheus retention period:
+>
+> ```bash
+> helm install stornx stornx/stornx -n stornx \
+>   --set prometheus.server.retention="7d"
+> ```
 
 ## Important Note
 
@@ -15,31 +47,33 @@ A Helm chart for deploying StornX - Kubernetes Resource Optimization and Balanci
 
 ## Installation
 
-### Install from local chart
-
 ```bash
-# Create namespace
+# Add the StornX Helm repository
+helm repo add stornx https://aposlaz.github.io/StornX
+helm repo update
+
+# Create the namespace
 kubectl create namespace stornx
 
-# Install with default values
-helm install stornx ./.kubernetes/helm -n stornx
+# Install with default values (all dependencies enabled)
+helm install stornx stornx/stornx -n stornx
 
-# Install with production values
-helm install stornx ./.kubernetes/helm -n stornx -f ./.kubernetes/helm/values-production.yaml
-
-# Install with development values
-helm install stornx ./.kubernetes/helm -n stornx -f ./.kubernetes/helm/values-development.yaml
-
-# Install with custom values
-helm install stornx ./.kubernetes/helm -n stornx \
+# Install with custom application settings
+helm install stornx stornx/stornx -n stornx \
   --set config.namespaces="namespace1,namespace2" \
   --set config.prometheusUrl="http://your-prometheus:9090"
+
+# Install with an external values file
+helm install stornx stornx/stornx -n stornx -f values-production.yaml
 ```
+
+> The chart is also available on [Artifact Hub](https://artifacthub.io/packages/helm/stornx/stornx).
 
 ## Upgrading
 
 ```bash
-helm upgrade stornx ./.kubernetes/helm -n stornx
+helm repo update
+helm upgrade stornx stornx/stornx -n stornx
 ```
 
 ## Uninstallation
@@ -183,14 +217,13 @@ kubectl auth can-i update deployments --as=system:serviceaccount:stornx:stornx-s
 ### Validate chart
 
 ```bash
-helm lint ./.kubernetes/helm
-helm template stornx ./.kubernetes/helm --debug
+helm template stornx stornx/stornx --debug
 ```
 
 ### Dry run installation
 
 ```bash
-helm install stornx ./.kubernetes/helm -n stornx --dry-run
+helm install stornx stornx/stornx -n stornx --dry-run
 ```
 
 ## Values Files

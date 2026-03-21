@@ -11,7 +11,6 @@ export class Graph {
     try {
       const query = `sum(rate(istio_requests_total{source_workload="${deployment}", source_workload_namespace="${namespace}", destination_workload!="unknown", reporter="destination", job="kubernetes-pods", response_code!="404"}[${time}])) by (pod, node, destination_workload, destination_service_namespace, destination_service_name, destination_version, source_version, source_workload, source_workload_namespace)`;
       const result = await executePrometheusQuery(this.prometheusUrl, query);
-      console.log(result);
       if (!result || result.data.result.length === 0) {
         logger.warn(`No downstream pods exists for deployment: ${deployment}`);
         return;

@@ -35,7 +35,7 @@ All environment variables and their default values
 
 ## Balancer Configuration (OptiBalancer)
 
-The OptiBalancer gradually redistributes traffic across nodes by updating Istio **DestinationRules**. Instead of jumping to the ideal distribution in one shot, it applies **adaptive damping** — small corrections when the imbalance is minor, larger corrections when it is severe. Five parameters control this behaviour:
+The OptiBalancer gradually redistributes traffic across nodes by updating Istio **DestinationRules**. Instead of jumping to the ideal distribution in one shot, it applies **adaptive damping** - small corrections when the imbalance is minor, larger corrections when it is severe. Five parameters control this behaviour:
 
 ### How the algorithm works (simplified)
 
@@ -54,7 +54,7 @@ Each from→to route is then shifted by at most `step` percentage-points per cyc
 
 ---
 
-### `BALANCER_MIN_DELTA` — Dead-zone gate (default `5`)
+### `BALANCER_MIN_DELTA` - Dead-zone gate (default `5`)
 
 After computing the next stepped distribution, the **L1 distance** (sum of absolute percentage-point differences across all routes) between the *current live DestinationRule* and the *proposed* one is calculated. If the distance is **less than this value**, the update is **skipped entirely**.
 
@@ -65,16 +65,16 @@ This prevents writing trivially different DestinationRules every cycle.
 | Too low (0–1) | Every micro-change triggers a DR update → excessive Istio API writes and potential traffic oscillation. |
 | Too high (30+) | The balancer rarely applies updates → traffic stays stale even when conditions have meaningfully changed. |
 
-### `BALANCER_MIN_STEP_SIZE` — Minimum step (default `5`)
+### `BALANCER_MIN_STEP_SIZE` - Minimum step (default `5`)
 
 The **floor** of the adaptive step size. When the imbalance (delta) is very small and urgency is near zero, each route can still shift by up to this many percentage-points per cycle.
 
 | Value | Effect |
 |---|---|
-| Too low (1) | Convergence is extremely slow — many cycles needed to correct even moderate imbalances. |
-| Too high (≥ `MAX_STEP_SIZE`) | Adaptive scaling is disabled — the system always makes large jumps, risking oscillation. |
+| Too low (1) | Convergence is extremely slow - many cycles needed to correct even moderate imbalances. |
+| Too high (≥ `MAX_STEP_SIZE`) | Adaptive scaling is disabled - the system always makes large jumps, risking oscillation. |
 
-### `BALANCER_MAX_STEP_SIZE` — Maximum step (default `20`)
+### `BALANCER_MAX_STEP_SIZE` - Maximum step (default `20`)
 
 The **ceiling** of the adaptive step size, used when urgency saturates to 1.0 (i.e. delta ≥ `URGENCY_THRESHOLD`). This is the largest percentage-point shift any single route can undergo in one cycle.
 
@@ -83,7 +83,7 @@ The **ceiling** of the adaptive step size, used when urgency saturates to 1.0 (i
 | Too low (same as `MIN_STEP_SIZE`) | The system cannot react quickly to sudden load shifts or node degradation. |
 | Too high (50+) | Aggressive one-shot rerouting under high urgency → possible over-correction and load spikes. |
 
-### `BALANCER_URGENCY_THRESHOLD` — Urgency ramp (default `50`)
+### `BALANCER_URGENCY_THRESHOLD` - Urgency ramp (default `50`)
 
 The L1 delta value at which urgency saturates to 1.0. Below this, the step is linearly interpolated between `MIN_STEP_SIZE` and `MAX_STEP_SIZE`.
 
@@ -100,7 +100,7 @@ The L1 delta value at which urgency saturates to 1.0. Below this, the step is li
 | Too low (5–10) | Almost any delta saturates urgency → the system always jumps at `MAX_STEP_SIZE`, losing gradual convergence. |
 | Too high (200+) | Urgency rarely reaches 1.0 → even severe imbalances are corrected sluggishly at near-`MIN_STEP_SIZE`. |
 
-### `BALANCER_EPSILON` — Per-route convergence tolerance (default `1`)
+### `BALANCER_EPSILON` - Per-route convergence tolerance (default `1`)
 
 When the absolute difference between the current and target percentage for a **single** route is ≤ epsilon, that route is left unchanged. This prevents rounding jitter at the tail end of convergence (e.g. toggling 33% ↔ 34% forever).
 

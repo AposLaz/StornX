@@ -1,0 +1,21 @@
+==================
+StornX - Operators
+==================
+Release : {{ .Release.Name }}
+Namespace: {{ .Release.Namespace }}
+
+Operators / CRDs deployed:
+
+{{- if index .Values "istio-base" "enabled" }}
+[✓] istio-base
+    Installs shared Istio resources and CRDs required by all Istio revisions.
+    CRDs include: VirtualService, DestinationRule, Gateway, ServiceEntry,
+                  AuthorizationPolicy, PeerAuthentication, and more.
+
+    Verify CRDs are installed:
+      kubectl get crds | grep istio.io
+{{- end }}
+
+NOTE: This chart must be installed BEFORE the stornx chart,
+as Prometheus and other components depend on the Istio CRDs being present.
+  kubectl --namespace {{ .Release.Namespace }} port-forward $POD_NAME 8080:$CONTAINER_PORT

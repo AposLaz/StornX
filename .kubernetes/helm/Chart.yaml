@@ -5,7 +5,7 @@ description: StornX - Kubernetes Resource Optimization and Balancing Controller
 type: application
 
 # Chart version - increment on chart changes
-version: 1.0.0
+version: 1.1.0
 
 # Application version
 appVersion: "1.0.0"
@@ -40,9 +40,40 @@ annotations:
   artifacthub.io/prerelease: "false"
   artifacthub.io/recommendations: |
     - url: https://artifacthub.io/packages/helm/prometheus-community/prometheus
+      reason: Prometheus is required for StornX to collect metrics and make informed scheduling decisions.
+    - url: https://artifacthub.io/packages/helm/istio-official/istiod
+      reason: Istio is required for StornX to manage traffic and optimize resource allocation effectively
+    - url: https://artifacthub.io/packages/helm/kube-netlag/kube-netlag
+      reason: kube-netlag is required for StornX to monitor latency between Kubernetes Nodes.
+    - url: https://artifacthub.io/packages/helm/metrics-server/metrics-server
+      reason: Metrics Server is recommended for providing resource usage metrics to StornX, enabling it to make informed scheduling decisions.
+    - url: https://artifacthub.io/packages/helm/kiali/kiali-server
+      reason: Kiali is recommended for visualizing and monitoring the service mesh, which can help in understanding the impact of StornX's optimizations.
   artifacthub.io/links: |
     - name: Documentation
       url: https://github.com/AposLaz/StornX/blob/main/.kubernetes/helm/README.md
     - name: Source
       url: https://github.com/AposLaz/StornX
 
+dependencies:
+  - name: istiod
+    version: "1.29.1"
+    repository: https://istio-release.storage.googleapis.com/charts
+    condition: istiod.enabled
+  - name: prometheus
+    version: "28.14.0"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus.enabled
+  - name: kube-netlag
+    version: "1.1.0"
+    repository: https://aposlaz.github.io/kube-netlag
+    condition: kube-netlag.enabled
+  - name: metrics-server
+    version: "3.13.0"
+    repository: https://kubernetes-sigs.github.io/metrics-server/
+    condition: metrics-server.enabled
+  - name: kiali-server
+    alias: kiali
+    version: "2.23.0"
+    repository: https://kiali.org/helm-charts
+    condition: kiali.enabled

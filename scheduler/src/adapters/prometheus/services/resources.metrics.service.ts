@@ -15,7 +15,6 @@ export class ResourcesMetricsService {
         logger.warn(`No data returned for query: ${query}`);
         return;
       }
-      console.log(result.data.result);
       return result.data.result;
     } catch (e: unknown) {
       const error = e as Error;
