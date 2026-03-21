@@ -1,6 +1,6 @@
 apiVersion: v2
 name: stornx
-description: StornX - Kubernetes Resource Optimization and Balancing Controller
+description: StornX - Kubernetes Resource Optimization and Load Balancing Controller
 
 type: application
 
@@ -16,8 +16,6 @@ keywords:
   - autoscaler
   - traffic-management
   - resource-optimization
-  - istio
-  - prometheus
   - load-balancing
 
 home: https://github.com/AposLaz/StornX
