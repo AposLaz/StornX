@@ -27,7 +27,7 @@ entries:
       category: Infrastructure
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-03-21T15:01:40.509248558Z"
+    created: "2026-03-21T15:13:00.286855172Z"
     dependencies:
     - condition: istiod.enabled
       name: istiod
@@ -51,7 +51,7 @@ entries:
       repository: https://kiali.org/helm-charts
       version: 2.23.0
     description: StornX - Kubernetes Resource Optimization and Balancing Controller
-    digest: 6d02e5ce928b060ead76ac8c6b154da9ccb06b0ddd6b1ec227da0980fd303afd
+    digest: 3fad5f74b6c58d13dc2b34315ae5a2aafb47f22ef45a02fedf7af4422d2ad3d0
     home: https://github.com/AposLaz/StornX
     keywords:
     - kubernetes
@@ -89,7 +89,7 @@ entries:
       category: Infrastructure
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-03-21T15:01:40.497191323Z"
+    created: "2026-03-21T15:13:00.274042627Z"
     description: StornX - Kubernetes Resource Optimization and Balancing Controller
     digest: a1edd2ba49074819d179c0d976bb41accbcbc8036752e308f704460dd41385e3
     home: https://github.com/AposLaz/StornX
@@ -112,4 +112,4 @@ entries:
     urls:
     - https://aposlaz.github.io/StornX/stornx-1.0.0.tgz
     version: 1.0.0
-generated: "2026-03-21T15:01:40.496345107Z"
+generated: "2026-03-21T15:13:00.273262596Z"
