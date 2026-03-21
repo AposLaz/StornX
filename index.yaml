@@ -27,7 +27,7 @@ entries:
       category: Infrastructure
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-03-21T15:16:04.954048591Z"
+    created: "2026-03-21T15:19:10.380926439Z"
     dependencies:
     - condition: istiod.enabled
       name: istiod
@@ -50,8 +50,8 @@ entries:
       name: kiali-server
       repository: https://kiali.org/helm-charts
       version: 2.23.0
-    description: StornX - Kubernetes Resource Optimization and Balancing Controller
-    digest: 5409130e214899b05aed0f80832e32e3abe3afa4aacad6b5cb210f3b424e938e
+    description: StornX - Kubernetes Resource Optimization and Load Balancing Controller
+    digest: dfe2c835787ea1d75a7d87b37d8e3c7795ac8f83c8adfcf2791783a1a3bed01c
     home: https://github.com/AposLaz/StornX
     keywords:
     - kubernetes
@@ -59,8 +59,6 @@ entries:
     - autoscaler
     - traffic-management
     - resource-optimization
-    - istio
-    - prometheus
     - load-balancing
     maintainers:
     - email: aplazidis@gmail.com
@@ -89,7 +87,7 @@ entries:
       category: Infrastructure
     apiVersion: v2
     appVersion: 1.0.0
-    created: "2026-03-21T15:16:04.940950932Z"
+    created: "2026-03-21T15:19:10.368170267Z"
     description: StornX - Kubernetes Resource Optimization and Balancing Controller
     digest: a1edd2ba49074819d179c0d976bb41accbcbc8036752e308f704460dd41385e3
     home: https://github.com/AposLaz/StornX
@@ -112,4 +110,4 @@ entries:
     urls:
     - https://aposlaz.github.io/StornX/stornx-1.0.0.tgz
     version: 1.0.0
-generated: "2026-03-21T15:16:04.940142542Z"
+generated: "2026-03-21T15:19:10.367306083Z"
