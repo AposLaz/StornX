@@ -13,3 +13,4 @@ locust/
 .terraform.tfstate.backup
 perf-tests
 .infra
+addons

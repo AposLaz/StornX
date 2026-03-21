@@ -198,8 +198,6 @@ These control the adaptive traffic-shifting algorithm. **Leave defaults if you a
 | [Main README](docs/README.md) | Environment variables, balancer deep-dive |
 | [OptiScaler Docs](docs/OptiScaler.md) | Autoscaling algorithm, decision trees, fault tolerance |
 | [Helm Chart README](.kubernetes/helm/README.md) | Full chart parameters, installation variants |
-| [Istio Setup](istio-helm/README.md) | Istio Helm installation notes |
-| [Addons](addons/istio/addons/README.md) | Prometheus, Grafana, Jaeger, Kiali manifests |
 
 ---
 
