@@ -1,0 +1,89 @@
+name: Website
+
+# Builds the Docusaurus site and publishes it to the `gh-pages` branch.
+#
+# The `gh-pages` branch is shared with the Helm chart repository
+# (see helm-release.yaml). Both workflows use `keep_files: true` so that
+# Docusaurus assets and Helm artifacts (index.yaml, *.tgz) coexist at the
+# same Pages root: https://aposlaz.github.io/StornX/
+#
+# Trigger strategy (open-source friendly):
+#   - PRs touching the website  -> build only (CI check, no publish).
+#   - Push to main touching the website -> build + publish.
+#   - Published release          -> rebuild + publish.
+#   - Manual dispatch            -> on-demand rebuild.
+
+on:
+    push:
+        branches:
+            - main
+        paths:
+            - "website/**"
+            - ".github/workflows/website.yaml"
+    pull_request:
+        branches:
+            - main
+        paths:
+            - "website/**"
+            - ".github/workflows/website.yaml"
+    release:
+        types: [published]
+    workflow_dispatch:
+
+# Serialize publishes so we never race with another website deploy.
+# Do NOT cancel in-progress runs (avoid interrupting a production publish).
+concurrency:
+    group: "website-${{ github.ref }}"
+    cancel-in-progress: false
+
+permissions:
+    contents: write
+
+jobs:
+    build:
+        name: Build & Publish
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0 # needed for git-based "last updated" timestamps
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22.x
+                  cache: npm
+                  cache-dependency-path: website/package-lock.json
+
+            - name: Install dependencies
+              working-directory: website
+              run: npm ci
+
+            - name: Type check
+              working-directory: website
+              run: npm run typecheck
+
+            - name: Build site
+              working-directory: website
+              run: npm run build
+              env:
+                  # Fail the build on broken links in CI to keep docs healthy.
+                  # Overrides the "warn" settings in docusaurus.config.ts.
+                  DOCUSAURUS_ON_BROKEN_LINKS: throw
+                  DOCUSAURUS_ON_BROKEN_MARKDOWN_LINKS: throw
+
+            - name: Publish to gh-pages
+              # Skip on PRs - they only run the build as a CI check.
+              if: github.event_name != 'pull_request'
+              uses: peaceiris/actions-gh-pages@v4
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_branch: gh-pages
+                  publish_dir: ./website/build
+                  # Preserve Helm chart files (index.yaml, *.tgz) that live
+                  # on gh-pages alongside the docs.
+                  keep_files: true
+                  user_name: "github-actions[bot]"
+                  user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+                  commit_message: "docs: publish website (${{ github.sha }})"

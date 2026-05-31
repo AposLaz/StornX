@@ -187,6 +187,14 @@ These control the adaptive traffic-shifting algorithm. **Leave defaults if you a
 |---|---|---|
 | `FT_MAX_ZONES` | `3` | Maximum zones across which replicas are spread |
 
+### Scaler Safety Guards
+
+| Variable | Default | Description |
+|---|---|---|
+| `SCALER_COOLDOWN_SECONDS` | `60` | Minimum seconds between two scaling actions on the same Deployment |
+| `SCALER_RESPECT_HPA` | `true` | Defer to an HPA if one targets the Deployment |
+| `SCALER_RESPECT_PDB` | `true` | Block scale-down that would violate a PodDisruptionBudget |
+
 > For full Helm chart parameters (RBAC, probes, resources, persistence, etc.) see the [Helm Chart README](.kubernetes/helm/README.md).
 
 ---
