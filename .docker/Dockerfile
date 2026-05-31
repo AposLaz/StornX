@@ -2,6 +2,7 @@ FROM node:slim AS base
 
 ENV TZ=UTC
 WORKDIR /app
+RUN corepack enable && corepack prepare yarn@1.22.22 --activate
 COPY package.json yarn.lock tsconfig.json ./
 RUN yarn install --frozen-lockfile
 COPY . .
@@ -16,6 +17,7 @@ FROM node:slim AS production
 
 ENV TZ=UTC
 WORKDIR /app
+RUN corepack enable && corepack prepare yarn@1.22.22 --activate
 
 RUN apt-get update && apt-get install -y curl bash
 RUN curl -LO "https://dl.k8s.io/release/$(curl -sL https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl" \
