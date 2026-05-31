@@ -6,7 +6,7 @@ const config: Config = {
   title: "StornX",
   tagline:
     "Latency-Optimized Pod Scheduling & Traffic Balancing for Kubernetes",
-  favicon: "img/logo/stornxLogo.png",
+  favicon: "img/logo/red_shape_logo.png",
 
   future: {
     v4: true,
