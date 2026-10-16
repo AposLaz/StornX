@@ -1,4 +1,7 @@
 node_modules/
+**/.env
+!**/.env.example
+.test-data/
 dist/
 coverage/
 istio-1.22.0/

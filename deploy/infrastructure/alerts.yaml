@@ -1,0 +1,28 @@
+groups:
+  - name: stornx-services
+    rules:
+      - alert: StornxBackgroundFailures
+        expr: increase(stornx_failures_total[10m]) > 0
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: 'StornX background work is failing; inspect decision journals' }
+      - alert: StornxOutboxDelayed
+        expr: stornx_outbox_oldest_seconds > 300
+        for: 5m
+        labels: { severity: critical }
+        annotations: { summary: 'Workload events have not reached the broker' }
+      - alert: StornxReconciliationDelayed
+        expr: stornx_jobs_oldest_seconds > 600
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: 'Traffic reconciliation is delayed' }
+      - alert: StornxDeadLetterJobs
+        expr: stornx_jobs_dead_letter > 0
+        for: 1m
+        labels: { severity: critical }
+        annotations: { summary: 'Traffic jobs require operator recovery' }
+      - alert: StornxScaleRecoveryDelayed
+        expr: stornx_operations_oldest_seconds > 600
+        for: 5m
+        labels: { severity: critical }
+        annotations: { summary: 'A scaling operation requires recovery or policy review' }

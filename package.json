@@ -1,0 +1,32 @@
+{
+  "name": "stornx-workspace",
+  "private": true,
+  "version": "2.0.0",
+  "packageManager": "yarn@1.22.22",
+  "workspaces": [
+    "services/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "yarn workspace @stornx/event-contracts build && yarn workspace @stornx/platform build && yarn workspace @stornx/optiscaler build && yarn workspace @stornx/optibalancer build",
+    "check:boundaries": "node scripts/check-boundaries.mjs",
+    "audit:runtime": "node scripts/audit-runtime.mjs",
+    "test": "yarn check:boundaries && node --test tests/*.test.mjs && yarn test:algorithms",
+    "test:algorithms": "node --experimental-vm-modules node_modules/jest/bin/jest.js --config jest.config.cjs --runInBand --silent",
+    "test:integration": "node --test tests/integration/*.test.mjs",
+    "format:check": "prettier --check services packages scripts tests deploy .github/workflows/{services,cd,ci,release,helm-release}.yaml docs/service-split.md .prettierrc.json package.json tsconfig.base.json jest.config.cjs",
+    "format": "prettier --write services packages scripts tests deploy .github/workflows/{services,cd,ci,release,helm-release}.yaml docs/service-split.md .prettierrc.json package.json tsconfig.base.json jest.config.cjs"
+  },
+  "devDependencies": {
+    "typescript": "5.7.2",
+    "@types/node": "22.10.1",
+    "@electric-sql/pglite": "0.3.7",
+    "jest": "29.7.0",
+    "ts-jest": "29.2.5",
+    "@jest/globals": "29.7.0",
+    "@types/jest": "29.5.14",
+    "prettier": "3.9.10",
+    "amqplib": "0.10.9",
+    "pg": "8.16.3"
+  }
+}

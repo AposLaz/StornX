@@ -1,65 +1,27 @@
-name: Release Helm Chart
-
+name: Package independent Helm chart
 on:
-    push:
-        branches:
-            - main
-        paths:
-            - ".kubernetes/helm/**"
-    workflow_dispatch:
-
+  workflow_dispatch:
+    inputs:
+      service:
+        type: choice
+        options: [optiscaler, optibalancer]
+        required: true
 permissions:
-    contents: write
-
+  contents: read
 jobs:
-    release:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
-              with:
-                  fetch-depth: 0
-
-            - name: Install Helm
-              uses: azure/setup-helm@v4
-              with:
-                  version: v3.14.0
-
-            - name: Package Helm Chart
-              run: |
-                  mkdir -p .helm-releases
-                  helm package .kubernetes/helm -d .helm-releases
-
-            # Fetch the existing index.yaml from gh-pages so `helm repo index --merge`
-            # can append the new chart version without losing previous releases.
-            - name: Fetch existing Helm index
-              run: |
-                  mkdir -p .helm-publish
-                  cp .helm-releases/*.tgz .helm-publish/
-                  curl -fsSL https://aposlaz.github.io/StornX/index.yaml \
-                      -o .helm-publish/index.yaml.existing || true
-
-            - name: Generate Helm repo index
-              run: |
-                  if [ -f .helm-publish/index.yaml.existing ]; then
-                    helm repo index .helm-publish \
-                      --url https://aposlaz.github.io/StornX \
-                      --merge .helm-publish/index.yaml.existing
-                    rm .helm-publish/index.yaml.existing
-                  else
-                    helm repo index .helm-publish \
-                      --url https://aposlaz.github.io/StornX
-                  fi
-
-            - name: Publish to gh-pages
-              uses: peaceiris/actions-gh-pages@v4
-              with:
-                  github_token: ${{ secrets.GITHUB_TOKEN }}
-                  publish_branch: gh-pages
-                  publish_dir: ./.helm-publish
-                  # Preserve Docusaurus website files that live on gh-pages
-                  # alongside the Helm chart artifacts.
-                  keep_files: true
-                  user_name: "github-actions[bot]"
-                  user_email: "41898282+github-actions[bot]@users.noreply.github.com"
-                  commit_message: "chore: release Helm chart (${{ github.sha }})"
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v4
+        with: { version: v3.17.3 }
+      - name: Validate and package selected chart
+        env:
+          SERVICE: ${{ inputs.service }}
+        run: |
+          helm lint "deploy/$SERVICE" --set config.clusterId=validation --set existingSecret=validation
+          helm package "deploy/$SERVICE" --destination .release-artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stornx-${{ inputs.service }}-chart
+          path: .release-artifacts/*.tgz

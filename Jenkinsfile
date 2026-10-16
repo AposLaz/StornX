@@ -56,9 +56,8 @@ pipeline {
             steps {
                 container (name: 'sched-builder') {
                     sh '''
-                    cd scheduler
-                    npm install --global yarn
-                    yarn install
+                    corepack enable
+                    yarn install --frozen-lockfile
                     '''
                 }
             }
@@ -67,7 +66,7 @@ pipeline {
             steps {
                 container (name: 'sched-builder') {
                     sh '''
-                    cd scheduler
+                    yarn build
                     yarn test
                     '''
                 }
@@ -86,7 +85,6 @@ pipeline {
             steps{
                 container (name: 'sched-builder') {
                     sh '''
-                        cd scheduler
                         npm install --global @cyclonedx/cdxgen
                         cdxgen -t nodejs -o bom.json
                     '''
@@ -97,7 +95,7 @@ pipeline {
             steps{
                 container (name: 'sched-builder') {
                     sh '''
-                        echo '{"project": "03b3af51-fef1-4143-9973-5c846ccf16e4", "bom": "'"$(cat scheduler/bom.json | base64 -w 0)"'"}' > payload.json
+                        echo '{"project": "03b3af51-fef1-4143-9973-5c846ccf16e4", "bom": "'"$(cat bom.json | base64 -w 0)"'"}' > payload.json
                     '''
                     sh '''
                         curl -X "PUT" ${DEPENDENCY_TRACK_URL} -H 'Content-Type: application/json' -H 'X-API-Key: '${DEPENDENCY_TRACK_API_KEY} -d @payload.json

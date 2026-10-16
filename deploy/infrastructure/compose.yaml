@@ -1,0 +1,28 @@
+# Local integration dependencies only; production uses TLS and three RabbitMQ members.
+services:
+  postgres:
+    image: postgres:17.6-bookworm
+    environment:
+      POSTGRES_USER: stornx_admin
+      POSTGRES_PASSWORD: local-admin-only
+      POSTGRES_DB: stornx
+    ports: ['127.0.0.1:5432:5432']
+    volumes: [postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U stornx_admin -d stornx']
+      interval: 5s
+      retries: 20
+  rabbitmq:
+    image: rabbitmq:4.1.8-management
+    environment:
+      RABBITMQ_DEFAULT_USER: local_admin
+      RABBITMQ_DEFAULT_PASS: local-admin-only
+    ports: ['127.0.0.1:5672:5672', '127.0.0.1:15672:15672']
+    volumes: [rabbitmq:/var/lib/rabbitmq]
+    healthcheck:
+      test: [CMD, rabbitmq-diagnostics, -q, ping]
+      interval: 5s
+      retries: 20
+volumes:
+  postgres:
+  rabbitmq:

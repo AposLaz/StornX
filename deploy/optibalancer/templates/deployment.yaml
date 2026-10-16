@@ -1,0 +1,107 @@
+{{- if .Values.enabled }}
+{{- $secret := required "existingSecret is required" .Values.existingSecret }}
+{{- $_ := required "config.clusterId is required" .Values.config.clusterId }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "service.name" . }}
+  labels: {{- include "service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: {maxSurge: 1, maxUnavailable: 0}
+  selector:
+    matchLabels: {{- include "service.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "service.labels" . | nindent 8 }}
+      annotations: {prometheus.io/scrape: "true", prometheus.io/port: "3000", prometheus.io/path: /metrics}
+    spec:
+      serviceAccountName: {{ include "service.name" . }}
+      terminationGracePeriodSeconds: 30
+      securityContext: {runAsNonRoot: true, runAsUser: 1000, runAsGroup: 1000, fsGroup: 1000, seccompProfile: {type: RuntimeDefault}}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: optibalancer
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: {drop: [ALL]}}
+          ports: [{name: http, containerPort: 3000}]
+          env:
+            - {name: ENV, value: production}
+            - {name: SERVICE_NAME, value: optibalancer}
+            - {name: APP_PORT, value: "3000"}
+            - name: POD_NAMESPACE
+              valueFrom: {fieldRef: {fieldPath: metadata.namespace}}
+            - name: NAMESPACES
+              value: {{ join "," .Values.config.namespaces | quote }}
+            - name: CLUSTER_ID
+              value: {{ .Values.config.clusterId | quote }}
+            - name: PROMETHEUS_URL
+              value: {{ .Values.config.prometheusUrl | quote }}
+            - name: INTERVAL_SECONDS
+              value: {{ .Values.config.intervalSeconds | quote }}
+            - name: DRY_RUN
+              value: {{ .Values.config.dryRun | quote }}
+            - name: MUTATIONS_ENABLED
+              value: {{ .Values.config.mutationsEnabled | quote }}
+            - name: METRICS_TYPE
+              value: {{ .Values.config.metricsType | quote }}
+            - name: CPU_WEIGHT
+              value: {{ .Values.config.cpuWeight | quote }}
+            - name: MEMORY_WEIGHT
+              value: {{ .Values.config.memoryWeight | quote }}
+            - name: MAX_METRIC_AGE_SECONDS
+              value: {{ .Values.config.maxMetricAgeSeconds | quote }}
+            - name: MAX_ATTEMPTS
+              value: {{ .Values.config.maxAttempts | quote }}
+            - name: RESPONSE_TIME_THRESHOLD
+              value: {{ .Values.config.responseTimeThreshold | quote }}
+            - name: BALANCER_MIN_DELTA
+              value: {{ .Values.config.minDelta | quote }}
+            - name: BALANCER_MIN_STEP_SIZE
+              value: {{ .Values.config.minStep | quote }}
+            - name: BALANCER_MAX_STEP_SIZE
+              value: {{ .Values.config.maxStep | quote }}
+            - name: BALANCER_URGENCY_THRESHOLD
+              value: {{ .Values.config.urgencyThreshold | quote }}
+            - name: BALANCER_EPSILON
+              value: {{ .Values.config.epsilon | quote }}
+            - name: DATABASE_URL
+              valueFrom: {secretKeyRef: {name: {{ $secret }}, key: database-url}}
+            - name: RABBITMQ_URL
+              valueFrom: {secretKeyRef: {name: {{ $secret }}, key: rabbitmq-url}}
+            {{- if .Values.tls.existingSecret }}
+            - {name: DATABASE_CA, value: /etc/stornx/tls/database-ca.crt}
+            - {name: RABBITMQ_CA, value: /etc/stornx/tls/rabbitmq-ca.crt}
+            {{- end }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          startupProbe:
+            httpGet: {path: /health/live, port: http}
+            periodSeconds: 5
+            failureThreshold: 60
+          livenessProbe:
+            httpGet: {path: /health/live, port: http}
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: {path: /health/ready, port: http}
+            periodSeconds: 10
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            {{- if .Values.tls.existingSecret }}
+            - {name: tls, mountPath: /etc/stornx/tls, readOnly: true}
+            {{- end }}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+        {{- if .Values.tls.existingSecret }}
+        - name: tls
+          secret:
+            secretName: {{ .Values.tls.existingSecret }}
+            items:
+              - {key: {{ .Values.tls.databaseCaKey }}, path: database-ca.crt}
+              - {key: {{ .Values.tls.rabbitmqCaKey }}, path: rabbitmq-ca.crt}
+        {{- end }}
+{{- end }}

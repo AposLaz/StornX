@@ -1,0 +1,43 @@
+enabled: true
+replicaCount: 1
+image:
+  repository: alazidis/stornx-optiscaler
+  tag: '1.0.0'
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+config:
+  clusterId: ''
+  namespaces: [default]
+  prometheusUrl: http://prometheus.monitoring.svc:9090
+  intervalSeconds: 300
+  dryRun: true
+  mutationsEnabled: false
+  metricsType: memory
+  cpuWeight: 50
+  memoryWeight: 50
+  maxMetricAgeSeconds: 600
+  maxAttempts: 12
+  lowerThreshold: 30
+  upperThreshold: 80
+  minReplicas: 1
+  maxReplicas: 100
+  cooldownSeconds: 60
+  targetedPlacement: true
+  maxZones: 3
+# Pre-existing secret with database-url and rabbitmq-url keys. No credentials in values.
+existingSecret: ''
+tls:
+  existingSecret: ''
+  databaseCaKey: database-ca.crt
+  rabbitmqCaKey: rabbitmq-ca.crt
+resources:
+  requests: { cpu: 250m, memory: 256Mi }
+  limits: { cpu: '1', memory: 1Gi }
+networkPolicy:
+  enabled: true
+  # Restrict to your API endpoint addresses before production use.
+  apiServerCIDRs: ['0.0.0.0/0']
+  infrastructureNamespace: stornx-infra
+  monitoringNamespace: monitoring
+  prometheusPort: 9090
+  extraEgress: []

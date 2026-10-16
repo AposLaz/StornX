@@ -1,0 +1,10 @@
+**/node_modules
+**/dist
+**/coverage
+.git
+Microsoft
+.env
+**/.env
+*.pdf
+website
+scheduler

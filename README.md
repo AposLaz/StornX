@@ -1,3 +1,13 @@
+> **Current development: independent services.** OptiScaler and OptiBalancer now
+> have separate packages, images, PostgreSQL journals, RabbitMQ coordination and
+> Helm releases. Start with the [service split and migration runbook](docs/service-split.md).
+> Build from the repository root using `yarn install --frozen-lockfile`, `yarn build`
+> and `yarn test`. The combined scheduler entrypoint is retired.
+>
+> The documentation below describes historical v1 releases. Use `deploy/optiscaler`
+> and `deploy/optibalancer` for the new services; preserve existing installations
+> until completing the migration runbook.
+
 <p align="center">
   <img src="images/logos/stornxLogo.png" alt="StornX Logo" width="280" />
 </p>

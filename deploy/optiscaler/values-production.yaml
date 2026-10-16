@@ -1,0 +1,10 @@
+# Supply clusterId, existingSecret, TLS CA and exact network destinations separately.
+replicaCount: 1
+config:
+  namespaces: [online-boutique]
+  intervalSeconds: 300
+  dryRun: true
+  mutationsEnabled: false
+resources:
+  requests: { cpu: 250m, memory: 256Mi }
+  limits: { cpu: '1', memory: 1Gi }

@@ -1,47 +1,24 @@
 name: Continuous Integration
-
 on:
   push:
-    branches:
-      - main
-
+    branches: [main]
+    paths:
+      [
+        'services/**',
+        'packages/**',
+        'deploy/**',
+        'scripts/**',
+        'tests/**',
+        'package.json',
+        'yarn.lock',
+        'tsconfig.base.json',
+        'jest.config.cjs',
+        '.github/workflows/**',
+      ]
   pull_request:
-    branches:
-      - main
-
+    branches: [main]
+permissions:
+  contents: read
 jobs:
-  ci:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup node env
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-
-      - name: Install dependencies
-        working-directory: scheduler
-        run: yarn install --frozen-lockfile
-
-      - name: TS check
-        working-directory: scheduler
-        run: yarn ts-check
-
-      - name: Linting
-        working-directory: scheduler
-        run: yarn lint
-
-      - name: Run tests with coverage
-        working-directory: scheduler
-        run: yarn test:coverage
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./scheduler/coverage/lcov.info
-          flags: unittests
-          name: code-coverage
+  services:
+    uses: ./.github/workflows/services.yaml

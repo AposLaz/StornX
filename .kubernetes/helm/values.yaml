@@ -1,216 +1,10 @@
-# Default values for StornX Helm chart
-# This is a YAML-formatted file.
-
-# -- Number of replicas
-replicaCount: 1
-
-# -- Application image configuration
-image:
-  repository: alazidis/stornx
-  pullPolicy: Always
-  # -- Overrides the image tag whose default is the chart appVersion
-  tag: "1.1.1"
-
-# -- Image pull secrets for private registries
-imagePullSecrets:
-  - name: regcred
-
-# -- Override the name of the chart
-nameOverride: ""
-# -- Override the full name of the chart
-fullnameOverride: ""
-
-# -- Namespace to deploy StornX (will be created if doesn't exist)
-namespace: stornx
-
-# =============================================================================
-# Application Configuration
-# =============================================================================
-config:
-  # -- Environment mode (production, development, staging)
-  env: production
-  
-  # -- Application port
-  appPort: 3000
-  
-  # -- Comma-separated list of namespaces to monitor
-  namespaces: "online-boutique"
-  
-  # -- Prometheus URL for metrics collection
-  prometheusUrl: "http://stornx-prometheus-server"
-  
-  # -- Cron expression for scheduling optimization jobs
-  cronjobExpression: "* * * * *"
-  # -- Cron for scraping locality labels (used by fault tolerance)
-  localityLabelsCron: "* * * * *"
-  
-  # -- Type of metrics to use for scaling decisions (cpu, memory)
-  metricsType: "memory"
-  
-  # -- Upper threshold percentage for scaling up
-  metricsUpperThreshold: "80"
-  
-  # -- Lower threshold percentage for scaling down
-  metricsLowerThreshold: "20"
-  responseTimeThreshold: "100"
-  cpuWeight: "50"
-  memoryWeight: "50"
-
-  # -- OptiBalancer tuning parameters
-  # -- OptiBalancer tuning parameters
-  # These tune traffic shifting behavior. Leave the defaults if you are unsure.
-  # Changing these values affects how aggressively traffic is moved between
-  # destinations; only modify when you understand the tradeoffs.
-  balancer:
-    minDelta: "5"
-    minStepSize: "5"
-    maxStepSize: "20"
-    urgencyThreshold: "50"
-    epsilon: "1"
-
-  # -- Fault tolerance settings
-  faultTolerance:
-    ftMaxZones: "3"
-
-# -- Additional environment variables
-extraEnv: []
-#  - name: CUSTOM_VAR
-#    value: "custom-value"
-#  - name: SECRET_VAR
-#    valueFrom:
-#      secretKeyRef:
-#        name: my-secret
-#        key: secret-key
-
-# =============================================================================
-# Service Account & RBAC
-# =============================================================================
-serviceAccount:
-  # -- Specifies whether a service account should be created
-  create: true
-  # -- Annotations to add to the service account
-  annotations: {}
-  # -- The name of the service account to use
-  name: "stornx-sa"
-
-rbac:
-  # -- Specifies whether RBAC resources should be created
-  create: true
-  # -- Name for the ClusterRole
-  clusterRoleName: "stornx-role"
-  # -- Name for the ClusterRoleBinding
-  clusterRoleBindingName: "stornx-binding"
-
-# =============================================================================
-# Pod Configuration
-# =============================================================================
-podAnnotations: {}
-#  prometheus.io/scrape: "true"
-#  prometheus.io/port: "3000"
-
-podLabels: {}
-
-podSecurityContext: {}
-#  fsGroup: 2000
-
-securityContext: {}
-#  capabilities:
-#    drop:
-#      - ALL
-#  readOnlyRootFilesystem: true
-#  runAsNonRoot: true
-#  runAsUser: 1000
-
-# =============================================================================
-# Resource Management
-# =============================================================================
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
-
-# =============================================================================
-# Health Probes
-# =============================================================================
-livenessProbe:
-  enabled: true
-  httpGet:
-    path: /health
-    port: http
-  initialDelaySeconds: 10
-  periodSeconds: 15
-  timeoutSeconds: 5
-  failureThreshold: 3
-  successThreshold: 1
-
-readinessProbe:
-  enabled: true
-  httpGet:
-    path: /health
-    port: http
-  initialDelaySeconds: 5
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 3
-  successThreshold: 1
-
-startupProbe:
-  enabled: false
-  httpGet:
-    path: /health
-    port: http
-  initialDelaySeconds: 0
-  periodSeconds: 10
-  timeoutSeconds: 5
-  failureThreshold: 30
-  successThreshold: 1
-
-# =============================================================================
-# Persistent Volume Claim
-# =============================================================================
-persistence:
-  enabled: false
-  # -- Storage class for PVC
-  storageClassName: ""
-  # -- Access modes for PVC
-  accessModes:
-    - ReadWriteOnce
-  # -- Size of PVC
-  size: 1Gi
-  # -- Annotations for PVC
-  annotations: {}
-  # -- Mount path in the container
-  mountPath: /data
-  # -- Existing PVC name (if using an existing PVC)
-  existingClaim: ""
-
-# =============================================================================
-# Additional Volumes
-# =============================================================================
-volumes: []
-#  - name: config
-#    configMap:
-#      name: stornx-config
-
-volumeMounts: []
-#  - name: config
-#    mountPath: /app/config
-#    readOnly: true
-
-
 # =============================================================================
 # Dependencies Configuration
 # =============================================================================
 
 kube-netlag:
-  enabled: true
-  imagePullSecrets:
-    - name: "regcred"
-  nameOverride: "kube-netlag"
-      
+  enabled: false
+
 prometheus:
   enabled: true
   imagePullSecrets:
@@ -221,14 +15,9 @@ prometheus:
       scrape_interval: 15s
       scrape_timeout: 10s
       evaluation_interval: 15s
-    extraConfigmapMounts:
-      - name: kube-netlag
-        mountPath: /etc/config/kube-netlag
-        configMap: kube-netlag
-        readOnly: true
-    
+
     # fullnameOverride: "prometheus"
-    
+
     persistentVolume:
       enabled: true
       mountPath: /data
@@ -281,7 +70,7 @@ istiod:
           memory: 128Mi
 
       imagePullSecrets:
-       - regcred
+        - regcred
 
       proxy:
         # Resources for the sidecar.
@@ -293,9 +82,8 @@ istiod:
             cpu: 80m
             memory: 128Mi
 
-
 metrics-server:
-  enabled: true
+  enabled: false
   imagePullSecrets:
     - name: "regcred"
 
@@ -309,7 +97,7 @@ kiali:
       - regcred
   external_services:
     prometheus:
-      url: http://stornx-deps-prometheus-server.stornx.svc.cluster.local:80
+      url: http://stornx-prometheus-server.stornx.svc.cluster.local:80
     istio:
       root_namespace: stornx
       component_namespaces:

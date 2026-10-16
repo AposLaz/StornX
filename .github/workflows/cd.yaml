@@ -1,18 +1,45 @@
-name: Build and Push to Docker
+name: Build independent service release
 on:
-    push:
-        branches:
-            - "main"
-    workflow_dispatch:
+  workflow_dispatch:
+    inputs:
+      service:
+        type: choice
+        options: [optiscaler, optibalancer]
+        required: true
+      version:
+        description: Exact service version, matching its package and chart
+        type: string
+        required: true
+      publish:
+        description: Publish the validated image to Docker Hub
+        type: boolean
+        default: false
+permissions:
+  contents: read
 jobs:
-    cd-staging:
-        runs-on: ubuntu-latest
-
-        steps:
-            - uses: actions/checkout@v3
-            - uses: "./.github/actions"
-              with:
-                  docker-username: ${{ secrets.DOCKER_USERNAME }}
-                  docker-password: ${{ secrets.DOCKER_PASSWORD }}
-                  docker-repository: "stornx"
-                  version-label: 1.1.1
+  checks:
+    uses: ./.github/workflows/services.yaml
+  image:
+    needs: checks
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate requested version
+        env:
+          # Select the workspace independently from the image's requested version.
+          SERVICE: ${{ inputs.service }}
+          VERSION: ${{ inputs.version }}
+        run: node scripts/validate-release.mjs
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        if: inputs.publish
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: services/${{ inputs.service }}/Dockerfile
+          push: ${{ inputs.publish }}
+          tags: ${{ vars.DOCKER_NAMESPACE || github.repository_owner }}/stornx-${{ inputs.service }}:${{ inputs.version }}
